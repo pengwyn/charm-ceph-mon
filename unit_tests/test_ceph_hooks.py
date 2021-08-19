@@ -32,6 +32,7 @@ TO_PATCH = [
     'relation_get',
     'relations_of_type',
     'status_set',
+    'try_disable_insecure_reclaim',
 ]
 
 CHARM_CONFIG = {'config-flags': '',

@@ -23,6 +23,7 @@ from charmhelpers.core.hookenv import (
     cached,
     config,
     goal_state,
+    is_leader,
     log,
     network_get_primary_address,
     related_units,
@@ -294,6 +295,24 @@ def get_ceph_osd_releases():
             if ceph_osd_release is not None:
                 ceph_osd_releases.add(ceph_osd_release)
     return list(ceph_osd_releases)
+
+
+def try_disable_insecure_reclaim():
+    """Disable insecure global-id reclaim on supported versions.
+
+    This function will disable insecure global-id reclaim on versions
+    of ceph that are supported. Running this on a healthy cluster or
+    a cluster that doesn't support the option won't have any effect.
+    """
+    if is_leader():
+        try:
+            subprocess.check_call([
+                'ceph', '--id', 'admin',
+                'config', 'set', 'mon',
+                'auth_allow_insecure_global_id_reclaim', 'false'])
+        except subprocess.CalledProcessError as e:
+            log("Could not disable insecure reclaim: {}".format(e),
+                level='ERROR')
 
 
 def execute_post_osd_upgrade_steps(ceph_osd_release):

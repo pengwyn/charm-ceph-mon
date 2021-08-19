@@ -103,6 +103,7 @@ from utils import (
     mgr_enable_module,
     is_mgr_module_enabled,
     set_balancer_mode,
+    try_disable_insecure_reclaim,
 )
 
 from charmhelpers.contrib.charmsupport import nrpe
@@ -325,10 +326,9 @@ def config_changed():
         if cmp_pkgrevno('ceph', '12.0.0') >= 0:
             status_set('maintenance', 'Bootstrapping single Ceph MGR')
             ceph.bootstrap_manager()
-
+        try_disable_insecure_reclaim()
     for relid in relation_ids('dashboard'):
         dashboard_relation(relid)
-
     # Update client relations
     notify_client()
 
@@ -528,6 +528,8 @@ def attempt_mon_cluster_bootstrap():
         except subprocess.CalledProcessError:
             log("Failed to initialize autoscaler, it must be "
                 "initialized on the last monitor", level='info')
+
+    try_disable_insecure_reclaim()
     # If we can and want to
     if is_leader() and config('customize-failure-domain'):
         # But only if the environment supports it

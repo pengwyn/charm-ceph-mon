@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mock
+import unittest.mock as mock
 import subprocess
 
 import test_utils

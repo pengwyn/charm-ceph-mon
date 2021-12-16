@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import json
-import mock
+import unittest.mock as mock
 
 import test_utils
 
@@ -250,7 +250,7 @@ class CephUtilsTestCase(test_utils.CharmTestCase):
     def test_set_require_osd_release_raise_call_error(self, log, check_call):
         release = 'luminous'
         check_call.side_effect = utils.subprocess.CalledProcessError(
-            0, mock.mock.MagicMock()
+            0, mock.MagicMock()
         )
         expected_call = mock.call(
             ['ceph', 'osd', 'require-osd-release', release]

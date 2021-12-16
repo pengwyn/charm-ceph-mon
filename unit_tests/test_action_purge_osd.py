@@ -14,7 +14,7 @@
 """Tests for purge_osd action."""
 
 from actions import purge_osd as action
-from mock import mock
+import unittest.mock as mock
 from test_utils import CharmTestCase
 
 

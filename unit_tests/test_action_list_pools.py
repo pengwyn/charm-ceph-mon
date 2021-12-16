@@ -107,9 +107,13 @@ class ListPoolsTestCase(CharmTestCase):
 
     def test_getting_list_pools_with_details(self):
         """Test getting list of pools with details."""
+        self.pools = None
+
+        def _function_set(message):
+            self.pools = json.loads(message['message'])
+        self.function_set.side_effect = _function_set
         list_pools.main()
         self.function_get.assert_called_once_with("format")
-        pools = json.loads(self.function_set.call_args.args[0]["message"])
-        self.assertEqual(pools[0]["pool"], 1)
-        self.assertEqual(pools[0]["size"], 3)
-        self.assertEqual(pools[0]["min_size"], 2)
+        self.assertEqual(self.pools[0]["pool"], 1)
+        self.assertEqual(self.pools[0]["size"], 3)
+        self.assertEqual(self.pools[0]["min_size"], 2)

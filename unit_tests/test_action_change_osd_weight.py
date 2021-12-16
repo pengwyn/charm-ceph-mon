@@ -14,7 +14,7 @@
 """Tests for reweight_osd action."""
 
 from actions import change_osd_weight as action
-from mock import mock
+import unittest.mock as mock
 from test_utils import CharmTestCase
 
 

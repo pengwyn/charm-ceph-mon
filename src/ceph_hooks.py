@@ -20,6 +20,7 @@ import os
 import subprocess
 import sys
 import uuid
+import pathlib
 
 sys.path.append('lib')
 import charms_ceph.utils as ceph
@@ -109,9 +110,11 @@ from charmhelpers.contrib.hardening.harden import harden
 hooks = Hooks()
 
 NAGIOS_PLUGINS = '/usr/local/lib/nagios/plugins'
+NAGIOS_FILE_FOLDER = '/var/lib/nagios'
 SCRIPTS_DIR = '/usr/local/bin'
-STATUS_FILE = '/var/lib/nagios/cat-ceph-status.txt'
+STATUS_FILE = '{}/cat-ceph-status.txt'.format(NAGIOS_FILE_FOLDER)
 STATUS_CRONFILE = '/etc/cron.d/cat-ceph-health'
+HOST_OSD_COUNT_REPORT = '{}/host-osd-report.json'.format(NAGIOS_FILE_FOLDER)
 
 
 def check_for_upgrade():
@@ -213,6 +216,44 @@ def emit_cephconf():
 
 
 JOURNAL_ZAPPED = '/var/lib/ceph/journal_zapped'
+
+
+def update_host_osd_count_report(reset=False):
+    """Update report showing hosts->osds. Used for monitoring."""
+    current_osd_tree = ceph.get_osd_tree('admin')
+
+    # Convert [CrushLocation,...] -> {<host>: [osdid],...} for easy comparison
+    current_host_osd_map = {}
+    for osd in current_osd_tree:
+        osd_list = current_host_osd_map.get(osd.host, [])
+        osd_list.append(osd.identifier)
+        current_host_osd_map[osd.host] = osd_list
+
+    pathlib.Path(NAGIOS_FILE_FOLDER).mkdir(parents=True, exist_ok=True)
+    if not os.path.isfile(HOST_OSD_COUNT_REPORT) or reset:
+        write_file(HOST_OSD_COUNT_REPORT, '{}')
+
+    with open(HOST_OSD_COUNT_REPORT, "r") as f:
+        expected_host_osd_map = json.load(f)
+
+    if current_host_osd_map == expected_host_osd_map:
+        return
+
+    for host, osd_list in current_host_osd_map.items():
+        if host not in expected_host_osd_map:
+            expected_host_osd_map[host] = osd_list
+
+        if len(osd_list) > len(expected_host_osd_map[host]):
+            # osd list is growing, add them to the expected
+            expected_host_osd_map[host] = osd_list
+
+        if len(osd_list) == len(expected_host_osd_map[host]) and \
+           osd_list != expected_host_osd_map[host]:
+            # different osd ids, maybe hdd swap, refresh
+            expected_host_osd_map[host] = osd_list
+
+    write_file(HOST_OSD_COUNT_REPORT,
+               json.dumps(expected_host_osd_map))
 
 
 @hooks.hook('config-changed')
@@ -884,6 +925,9 @@ def osd_relation(relid=None, unit=None):
         for relid in relation_ids('dashboard'):
             dashboard_relation(relid)
 
+        if ready_for_service():
+            update_host_osd_count_report()
+
     else:
         log('mon cluster not in quorum - deferring fsid provision')
 
@@ -1143,6 +1187,10 @@ def update_nrpe_config():
                            'check_ceph_status.py'),
               os.path.join(NAGIOS_PLUGINS, 'check_ceph_status.py'))
 
+        rsync(os.path.join(os.getenv('CHARM_DIR'), 'files', 'nagios',
+                           'check_ceph_osd_count.py'),
+              os.path.join(NAGIOS_PLUGINS, 'check_ceph_osd_count.py'))
+
     script = os.path.join(SCRIPTS_DIR, 'collect_ceph_status.sh')
     rsync(os.path.join(os.getenv('CHARM_DIR'), 'files',
                        'nagios', 'collect_ceph_status.sh'),
@@ -1165,6 +1213,14 @@ def update_nrpe_config():
     nrpe_setup.add_check(
         shortname="ceph",
         description='Check Ceph health {{{}}}'.format(current_unit),
+        check_cmd=check_cmd
+    )
+
+    check_cmd = 'check_ceph_osd_count.py {} '.format(
+        HOST_OSD_COUNT_REPORT)
+    nrpe_setup.add_check(
+        shortname='ceph_osd_count',
+        description='Check if osd count matches expected count',
         check_cmd=check_cmd
     )
 

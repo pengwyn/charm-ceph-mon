@@ -22,3 +22,12 @@ ceph status --format json >${TMP_FILE}
 chown root:nagios ${TMP_FILE}
 chmod 0640 ${TMP_FILE}
 mv ${TMP_FILE} ${DATA_FILE}
+
+DATA_FILE="${DATA_DIR}/current-ceph-osd-count.json"
+TMP_FILE=$(mktemp -p ${DATA_DIR})
+
+ceph osd tree --format json > ${TMP_FILE}
+
+chown root:nagios ${TMP_FILE}
+chmod 0640 ${TMP_FILE}
+mv ${TMP_FILE} ${DATA_FILE}

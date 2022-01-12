@@ -102,6 +102,54 @@ class ServiceStatusTestCase(test_utils.CharmTestCase):
         self.status_set.assert_called_with('active', mock.ANY)
         self.application_version_set.assert_called_with('10.2.2')
 
+    @mock.patch.object(hooks, 'relation_ids')
+    @mock.patch.object(hooks, 'get_osd_settings')
+    @mock.patch.object(hooks, 'has_rbd_mirrors')
+    @mock.patch.object(hooks, 'sufficient_osds')
+    @mock.patch.object(hooks, 'get_peer_units')
+    def test_assess_status_no_osd_relation(
+        self,
+        _peer_units,
+        _sufficient_osds,
+        _has_rbd_mirrors,
+        _get_osd_settings,
+        _relation_ids
+    ):
+        _peer_units.return_value = ENOUGH_PEERS_COMPLETE
+        _sufficient_osds.return_value = False
+        _relation_ids.return_value = []
+        self.ceph.is_bootstrapped.return_value = True
+        self.ceph.is_quorum.return_value = True
+        _has_rbd_mirrors.return_value = False
+        _get_osd_settings.return_value = {}
+        hooks.assess_status()
+        self.status_set.assert_called_with('blocked', 'Missing relation: OSD')
+        self.application_version_set.assert_called_with('10.2.2')
+
+    @mock.patch.object(hooks, 'relation_ids')
+    @mock.patch.object(hooks, 'get_osd_settings')
+    @mock.patch.object(hooks, 'has_rbd_mirrors')
+    @mock.patch.object(hooks, 'sufficient_osds')
+    @mock.patch.object(hooks, 'get_peer_units')
+    def test_assess_status_osd_relation_but_insufficient_osds(
+        self,
+        _peer_units,
+        _sufficient_osds,
+        _has_rbd_mirrors,
+        _get_osd_settings,
+        _relation_ids
+    ):
+        _peer_units.return_value = ENOUGH_PEERS_COMPLETE
+        _sufficient_osds.return_value = False
+        _relation_ids.return_value = ['osd:1']
+        self.ceph.is_bootstrapped.return_value = True
+        self.ceph.is_quorum.return_value = True
+        _has_rbd_mirrors.return_value = False
+        _get_osd_settings.return_value = {}
+        hooks.assess_status()
+        self.status_set.assert_called_with('waiting', mock.ANY)
+        self.application_version_set.assert_called_with('10.2.2')
+
     @mock.patch.object(hooks, 'get_osd_settings')
     @mock.patch.object(hooks, 'has_rbd_mirrors')
     @mock.patch.object(hooks, 'sufficient_osds')

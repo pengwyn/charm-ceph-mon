@@ -868,6 +868,15 @@ def osd_relation(relid=None, unit=None):
             'ceph-public-address': public_addr,
             'osd_upgrade_key': ceph.get_named_key('osd-upgrade',
                                                   caps=ceph.osd_upgrade_caps),
+            'osd_disk_removal_key': ceph.get_named_key(
+                'osd-removal',
+                caps={'mon': [
+                    'allow command "osd safe-to-destroy"',
+                    'allow command "osd crush reweight"',
+                    'allow command "osd purge"',
+                    'allow command "osd destroy"',
+                ]}
+            )
         }
 
         data.update(handle_broker_request(relid, unit))
@@ -1134,10 +1143,7 @@ def upgrade_charm():
     # NOTE(jamespage):
     # Reprocess broker requests to ensure that any cephx
     # key permission changes are applied
-    notify_client()
-    notify_radosgws()
-    notify_rbd_mirrors()
-    notify_prometheus()
+    notify_relations()
 
 
 @hooks.hook('nrpe-external-master-relation-joined')

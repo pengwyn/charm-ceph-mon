@@ -1,28 +1,6 @@
 - project:
     templates:
-      - charm-yoga-unit-jobs
-      - charm-yoga-functional-jobs
+      - charm-unit-jobs-py38
+      - charm-unit-jobs-py39
       - charm-xena-functional-jobs
-      - charm-wallaby-functional-jobs
-      - charm-victoria-functional-jobs
-      - charm-ussuri-functional-jobs
-      - charm-stein-functional-jobs
-      - charm-queens-functional-jobs
-    check:
-      jobs:
-      - focal-ussuri-ec-ceph-mon
-      - bionic-train-with-fsid
-
-- job:
-    name: focal-ussuri-ec-ceph-mon
-    parent: func-target
-    dependencies: &smoke-jobs
-      - bionic-ussuri
-    vars:
-      tox_extra_args: focal-ussuri-ec
-- job:
-    name: bionic-train-with-fsid
-    parent: func-target
-    dependencies: *smoke-jobs
-    vars:
-      tox_extra_args: bionic-train-with-fsid
+      - charm-yoga-functional-jobs

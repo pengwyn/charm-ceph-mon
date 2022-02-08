@@ -1296,6 +1296,8 @@ def assess_status():
         expected_osd_count = config('expected-osd-count') or 3
         if sufficient_osds(expected_osd_count):
             status_set('active', 'Unit is ready and clustered')
+        elif not relation_ids('osd'):
+            status_set('blocked', 'Missing relation: OSD')
         else:
             status_set(
                 'waiting',

@@ -32,19 +32,19 @@ applications:
 
   keystone-mysql-router:
     charm: ch:mysql-router
-    channel: latest/edge
+    channel: stable/yoga
   glance-mysql-router:
     charm: ch:mysql-router
-    channel: latest/edge
+    channel: stable/yoga
   cinder-mysql-router:
     charm: ch:mysql-router
-    channel: latest/edge
+    channel: stable/yoga
   nova-cloud-controller-mysql-router:
     charm: ch:mysql-router
-    channel: latest/edge
+    channel: stable/yoga
   placement-mysql-router:
     charm: ch:mysql-router
-    channel: latest/edge
+    channel: stable/yoga
 
   mysql-innodb-cluster:
     charm: ch:mysql-innodb-cluster
@@ -55,7 +55,7 @@ applications:
       - '0'
       - '1'
       - '2'
-    channel: latest/edge
+    channel: stable/yoga
 
   ceph-osd:
     charm: ch:ceph-osd
@@ -69,10 +69,10 @@ applications:
       - '3'
       - '4'
       - '5'
-    channel: latest/edge
+    channel: stable/yoga
 
   ceph-mon:
-    charm: ../../../ceph-mon
+    charm: ../../ceph-mon.charm
     num_units: 3
     options:
       source: *openstack-origin
@@ -89,7 +89,7 @@ applications:
       source: *openstack-origin
     to:
       - '9'
-    channel: latest/edge
+    channel: stable/yoga
 
   keystone:
     expose: True
@@ -99,7 +99,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '10'
-    channel: latest/edge
+    channel: stable/yoga
 
   nova-compute:
     charm: ch:nova-compute
@@ -109,7 +109,7 @@ applications:
       libvirt-image-backend: rbd
     to:
       - '11'
-    channel: latest/edge
+    channel: stable/yoga
 
   glance:
     expose: True
@@ -119,7 +119,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '12'
-    channel: latest/edge
+    channel: stable/yoga
 
   cinder:
     expose: True
@@ -131,11 +131,11 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '13'
-    channel: latest/edge
+    channel: stable/yoga
 
   cinder-ceph:
     charm: ch:cinder-ceph
-    channel: latest/edge
+    channel: stable/yoga
 
   nova-cloud-controller:
     expose: True
@@ -145,7 +145,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '14'
-    channel: latest/edge
+    channel: stable/yoga
 
   placement:
     charm: ch:placement
@@ -154,7 +154,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '15'
-    channel: latest/edge
+    channel: stable/yoga
 
   prometheus2:
 # Pin prometheus2 charm version Bug #1891942

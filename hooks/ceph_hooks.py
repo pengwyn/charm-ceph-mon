@@ -875,6 +875,7 @@ def osd_relation(relid=None, unit=None):
                     'allow command "osd crush reweight"',
                     'allow command "osd purge"',
                     'allow command "osd destroy"',
+                    'allow command "osd ok-to-stop"',
                 ]}
             )
         }

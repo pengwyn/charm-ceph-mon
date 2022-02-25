@@ -439,3 +439,5 @@ delete-user:
       type: string
       description: "User ID to delete."
   required: [username]
+pg-repair:
+  description: "Repair inconsistent placement groups, if safe to do so."

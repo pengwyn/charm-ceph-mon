@@ -871,7 +871,7 @@ def osd_relation(relid=None, unit=None):
             'osd_disk_removal_key': ceph.get_named_key(
                 'osd-removal',
                 caps={
-                    'mgr': ['allow r'],
+                    'mgr': ['allow *'],
                     'mon': [
                         'allow r',
                         'allow command "osd crush reweight"',

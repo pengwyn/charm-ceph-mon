@@ -184,7 +184,7 @@ def get_ceph_context():
     cluster_network = ', '.join(networks)
 
     cephcontext = {
-        'auth_supported': config('auth-supported'),
+        'auth_supported': 'cephx',
         'mon_hosts': config('monitor-hosts') or ' '.join(get_mon_hosts()),
         'fsid': leader_get('fsid'),
         'old_auth': cmp_pkgrevno('ceph', "0.51") < 0,
@@ -605,7 +605,7 @@ def _get_ceph_info_from_configs():
     public_addr = get_public_addr()
     rbd_features = get_rbd_features()
     data = {
-        'auth': config('auth-supported'),
+        'auth': 'cephx',
         'ceph-public-address': public_addr
     }
     if rbd_features:
@@ -864,7 +864,7 @@ def osd_relation(relid=None, unit=None):
         data = {
             'fsid': leader_get('fsid'),
             'osd_bootstrap_key': ceph.get_osd_bootstrap_key(),
-            'auth': config('auth-supported'),
+            'auth': 'cephx',
             'ceph-public-address': public_addr,
             'osd_upgrade_key': ceph.get_named_key('osd-upgrade',
                                                   caps=ceph.osd_upgrade_caps),
@@ -996,7 +996,7 @@ def radosgw_relation(relid=None, unit=None):
         public_addr = get_public_addr()
         data = {
             'fsid': leader_get('fsid'),
-            'auth': config('auth-supported'),
+            'auth': 'cephx',
             'ceph-public-address': public_addr,
         }
         key_name = relation_get('key_name', unit=unit, rid=relid)
@@ -1026,7 +1026,7 @@ def rbd_mirror_relation(relid=None, unit=None, recurse=True):
         # handle broker requests first to get a updated pool map
         data = (handle_broker_request(relid, unit, recurse=recurse))
         data.update({
-            'auth': config('auth-supported'),
+            'auth': 'cephx',
             'ceph-public-address': get_public_addr(),
             'pools': json.dumps(ceph.list_pools_detail(), sort_keys=True),
             'broker_requests': json.dumps(
@@ -1071,7 +1071,7 @@ def mds_relation_joined(relid=None, unit=None):
             'fsid': leader_get('fsid'),
             '{}_mds_key'.format(mds_name):
                 ceph.get_mds_key(name=mds_name),
-            'auth': config('auth-supported'),
+            'auth': 'cephx',
             'ceph-public-address': public_addr}
         data.update(handle_broker_request(relid, unit))
         relation_set(relation_id=relid, relation_settings=data)
@@ -1090,7 +1090,7 @@ def admin_relation_joined(relid=None):
         mon_hosts = config('monitor-hosts') or ' '.join(get_mon_hosts())
         data = {'key': ceph.get_named_key(name=name, caps=ceph.admin_caps),
                 'fsid': leader_get('fsid'),
-                'auth': config('auth-supported'),
+                'auth': 'cephx',
                 'mon_hosts': mon_hosts,
                 }
         relation_set(relation_id=relid,

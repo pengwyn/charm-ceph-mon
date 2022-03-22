@@ -78,7 +78,7 @@ class CephHooksTestCase(test_utils.CharmTestCase):
         mock_config.side_effect = lambda key: config[key]
         mock_config2.side_effect = lambda key: config[key]
         ctxt = ceph_hooks.get_ceph_context()
-        expected = {'auth_supported': False,
+        expected = {'auth_supported': 'cephx',
                     'ceph_cluster_network': '',
                     'ceph_public_network': '',
                     'cluster_addr': '10.1.0.1',
@@ -110,7 +110,7 @@ class CephHooksTestCase(test_utils.CharmTestCase):
         mock_config.side_effect = lambda key: config[key]
         mock_config2.side_effect = lambda key: config[key]
         ctxt = ceph_hooks.get_ceph_context()
-        expected = {'auth_supported': False,
+        expected = {'auth_supported': 'cephx',
                     'ceph_cluster_network': '',
                     'ceph_public_network': '',
                     'cluster_addr': '10.1.0.1',
@@ -143,7 +143,7 @@ class CephHooksTestCase(test_utils.CharmTestCase):
         mock_config.side_effect = lambda key: config[key]
         mock_config2.side_effect = lambda key: config[key]
         ctxt = ceph_hooks.get_ceph_context()
-        expected = {'auth_supported': False,
+        expected = {'auth_supported': 'cephx',
                     'ceph_cluster_network': '',
                     'ceph_public_network': '',
                     'cluster_addr': '10.1.0.1',
@@ -178,7 +178,7 @@ class CephHooksTestCase(test_utils.CharmTestCase):
         mock_config.side_effect = lambda key: config[key]
         mock_config2.side_effect = lambda key: config[key]
         ctxt = ceph_hooks.get_ceph_context()
-        expected = {'auth_supported': False,
+        expected = {'auth_supported': 'cephx',
                     'ceph_cluster_network': '',
                     'ceph_public_network': '',
                     'cluster_addr': '10.1.0.1',
@@ -299,7 +299,7 @@ class CephHooksTestCase(test_utils.CharmTestCase):
             relation_id='arelid',
             relation_settings={
                 'key': _get_named_key(),
-                'auth': False,
+                'auth': 'cephx',
                 'ceph-public-address': _get_public_addr()
             })
 
@@ -318,7 +318,7 @@ class CephHooksTestCase(test_utils.CharmTestCase):
             relation_id='arelid',
             relation_settings={
                 'key': _get_named_key(),
-                'auth': False,
+                'auth': 'cephx',
                 'ceph-public-address': _get_public_addr(),
                 'rbd-features': 42,
             })
@@ -627,7 +627,7 @@ class RelatedUnitsTestCase(unittest.TestCase):
             relation_id='rel1',
             relation_settings={
                 'key': _get_named_key(),
-                'auth': False,
+                'auth': 'cephx',
                 'ceph-public-address': _get_public_addr()
             })
         _get_rbd_features.return_value = 42
@@ -637,7 +637,7 @@ class RelatedUnitsTestCase(unittest.TestCase):
             relation_id='rel1',
             relation_settings={
                 'key': _get_named_key(),
-                'auth': False,
+                'auth': 'cephx',
                 'ceph-public-address': _get_public_addr(),
                 'rbd-features': 42,
             })
@@ -689,7 +689,7 @@ class RelatedUnitsTestCase(unittest.TestCase):
             relation_id='rel1',
             relation_settings={
                 'key': get_named_key(),
-                'auth': False,
+                'auth': 'cephx',
                 'ceph-public-address': get_public_addr(),
                 'broker-rsp-glance-0': 'AOK',
                 'broker_rsp': 'AOK'})
@@ -700,7 +700,7 @@ class RelatedUnitsTestCase(unittest.TestCase):
             relation_id=None,
             relation_settings={
                 'key': get_named_key(),
-                'auth': False,
+                'auth': 'cephx',
                 'ceph-public-address': get_public_addr(),
                 'broker-rsp-glance-0': 'AOK',
                 'broker_rsp': 'AOK'})
@@ -713,7 +713,7 @@ class RelatedUnitsTestCase(unittest.TestCase):
             relation_id='rel1',
             relation_settings={
                 'key': get_named_key(),
-                'auth': False,
+                'auth': 'cephx',
                 'ceph-public-address': get_public_addr()})
 
     @patch.object(ceph_hooks, 'req_already_treated')

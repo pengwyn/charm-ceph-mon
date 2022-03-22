@@ -65,10 +65,16 @@ options:
     type: string
     default: cephx
     description: |
-      Which authentication flavour to use.
+      [DEPRECATED] Which authentication flavour to use.
       .
-      Valid options are "cephx" and "none". If "none" is specified,
-      keys will still be created and deployed so that it can be
+      This option no longer has any effect. It's insecure and breaks expected
+      Ceph functionality when assigned to None. The charm now ignores the
+      option and always sets auth to cephx.
+      .
+      Original description:
+      .
+      [DEPRECATED] Valid options are "cephx" and "none". If "none" is
+      specified, keys will still be created and deployed so that it can be
       enabled later.
   monitor-secret:
     type: string

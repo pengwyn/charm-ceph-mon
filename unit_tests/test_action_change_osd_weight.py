@@ -34,5 +34,4 @@ class ReweightTestCase(CharmTestCase):
         osd_num = 4
         new_weight = 1.2
         action.crush_reweight(osd_num, new_weight)
-        print(_reweight_osd.calls)
         _reweight_osd.assert_has_calls([mock.call("4", "1.2")])

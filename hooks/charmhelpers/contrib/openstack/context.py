@@ -118,12 +118,7 @@ from charmhelpers.contrib.openstack.utils import (
 )
 from charmhelpers.core.unitdata import kv
 
-try:
-    from sriov_netplan_shim import pci
-except ImportError:
-    # The use of the function and contexts that require the pci module is
-    # optional.
-    pass
+from charmhelpers.contrib.hardware import pci
 
 try:
     import psutil
@@ -426,6 +421,9 @@ class IdentityServiceContext(OSContextGenerator):
             ('password', ctxt.get('admin_password', '')),
             ('signing_dir', ctxt.get('signing_dir', '')),))
 
+        if ctxt.get('service_type'):
+            c.update((('service_type', ctxt.get('service_type')),))
+
         return c
 
     def __call__(self):
@@ -467,6 +465,9 @@ class IdentityServiceContext(OSContextGenerator):
                              'auth_protocol': auth_protocol,
                              'internal_protocol': int_protocol,
                              'api_version': api_version})
+
+                if rdata.get('service_type'):
+                    ctxt['service_type'] = rdata.get('service_type')
 
                 if float(api_version) > 2:
                     ctxt.update({
@@ -538,6 +539,9 @@ class IdentityCredentialsContext(IdentityServiceContext):
                     'auth_protocol': auth_protocol,
                     'api_version': api_version
                 })
+
+                if rdata.get('service_type'):
+                    ctxt['service_type'] = rdata.get('service_type')
 
                 if float(api_version) > 2:
                     ctxt.update({'admin_domain_name':
@@ -3120,7 +3124,7 @@ class SRIOVContext(OSContextGenerator):
         """Determine number of Virtual Functions (VFs) configured for device.
 
         :param device: Object describing a PCI Network interface card (NIC)/
-        :type device: sriov_netplan_shim.pci.PCINetDevice
+        :type device: contrib.hardware.pci.PCINetDevice
         :param sriov_numvfs: Number of VFs requested for blanket configuration.
         :type sriov_numvfs: int
         :returns: Number of VFs to configure for device

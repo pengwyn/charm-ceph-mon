@@ -16,11 +16,6 @@
 
 """Changes the crush weight of an OSD."""
 
-import sys
-
-sys.path.append("lib")
-sys.path.append("hooks")
-
 from charmhelpers.core.hookenv import function_fail, function_get, log
 from charms_ceph.utils import reweight_osd
 

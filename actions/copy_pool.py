@@ -14,10 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import subprocess
-
-sys.path.append('hooks')
 
 import charmhelpers.core.hookenv as hookenv
 

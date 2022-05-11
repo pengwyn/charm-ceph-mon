@@ -17,9 +17,6 @@
 from subprocess import CalledProcessError
 
 __author__ = 'chris'
-import sys
-
-sys.path.append('hooks')
 
 from charmhelpers.contrib.storage.linux.ceph import remove_erasure_profile
 from charmhelpers.core.hookenv import action_get, log, action_fail

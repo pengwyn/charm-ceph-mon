@@ -15,9 +15,6 @@
 # limitations under the License.
 
 from subprocess import CalledProcessError
-import sys
-
-sys.path.append('hooks')
 
 from charmhelpers.contrib.storage.linux.ceph import Pool, pool_exists
 from charmhelpers.core.hookenv import action_get, log, action_fail

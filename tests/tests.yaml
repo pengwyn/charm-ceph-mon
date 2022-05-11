@@ -9,9 +9,17 @@ smoke_bundles:
   - focal-yoga
 
 configure:
-  - zaza.openstack.charm_tests.glance.setup.add_lts_image
+  - install:
+    - zaza.openstack.charm_tests.glance.setup.add_lts_image
 
 tests:
+  - install:
+    - zaza.openstack.charm_tests.ceph.tests.CheckPoolTypes
+    - zaza.openstack.charm_tests.ceph.tests.CephLowLevelTest
+    - zaza.openstack.charm_tests.ceph.tests.CephRelationTest
+    - zaza.openstack.charm_tests.ceph.tests.CephTest
+    - zaza.openstack.charm_tests.ceph.osd.tests.SecurityTest
+    - zaza.openstack.charm_tests.ceph.tests.CephPrometheusTest
   - zaza.openstack.charm_tests.ceph.tests.CheckPoolTypes
   - zaza.openstack.charm_tests.ceph.tests.CephLowLevelTest
   - zaza.openstack.charm_tests.ceph.tests.CephRelationTest

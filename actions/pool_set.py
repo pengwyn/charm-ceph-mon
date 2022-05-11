@@ -15,10 +15,6 @@
 # limitations under the License.
 
 from subprocess import CalledProcessError
-import sys
-
-sys.path.append('lib')
-sys.path.append('hooks')
 
 from charmhelpers.core.hookenv import action_get, log, action_fail
 from charms_ceph.broker import handle_set_pool_value

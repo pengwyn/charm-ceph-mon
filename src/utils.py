@@ -32,10 +32,7 @@ from charmhelpers.core.hookenv import (
     status_set,
     unit_get,
 )
-from charmhelpers.fetch import (
-    apt_install,
-    filter_installed_packages
-)
+
 from charmhelpers.core.host import (
     lsb_release,
     CompareHostReleases,
@@ -47,12 +44,7 @@ from charmhelpers.contrib.network.ip import (
 )
 from charmhelpers.contrib.storage.linux import ceph
 
-try:
-    import dns.resolver
-except ImportError:
-    apt_install(filter_installed_packages(['python-dnspython']),
-                fatal=True)
-    import dns.resolver
+import dns.resolver
 
 
 class OsdPostUpgradeError(Exception):

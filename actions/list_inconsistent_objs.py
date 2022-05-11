@@ -16,11 +16,8 @@
 
 import json
 import re
-import sys
 from subprocess import check_output, CalledProcessError
 import yaml
-
-sys.path.append('hooks')
 
 from charmhelpers.core.hookenv import function_fail, function_get, \
     function_set, log

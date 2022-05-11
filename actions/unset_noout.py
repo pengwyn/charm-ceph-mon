@@ -14,10 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-sys.path.append('hooks')
 from charmhelpers.core.hookenv import action_set, action_fail
-sys.path.append('lib')
 from charms_ceph.utils import osd_noout
 
 if __name__ == '__main__':

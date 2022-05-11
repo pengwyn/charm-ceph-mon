@@ -13,22 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import json
-import os
-import sys
 from subprocess import check_output, CalledProcessError
-
-_path = os.path.dirname(os.path.realpath(__file__))
-_hooks = os.path.abspath(os.path.join(_path, "../hooks"))
-
-
-def _add_path(path):
-    if path not in sys.path:
-        sys.path.insert(1, path)
-
-
-_add_path(_hooks)
-
 
 from charmhelpers.core.hookenv import (
     log,

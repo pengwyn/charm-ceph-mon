@@ -16,7 +16,7 @@ import unittest.mock as mock
 
 import test_utils
 
-from hooks import utils
+import utils
 
 
 class CephUtilsTestCase(test_utils.CharmTestCase):

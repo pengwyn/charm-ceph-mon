@@ -14,10 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
-sys.path.append('hooks')
-
 from charmhelpers.contrib.storage.linux.ceph import get_erasure_profile
 from charmhelpers.core.hookenv import action_get, action_set
 

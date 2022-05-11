@@ -14,9 +14,6 @@
 
 import json
 from subprocess import CalledProcessError, check_output
-import sys
-
-sys.path.append('hooks')
 
 from charmhelpers.core.hookenv import (
     action_get,

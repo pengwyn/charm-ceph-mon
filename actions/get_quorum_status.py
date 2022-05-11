@@ -16,11 +16,8 @@
 
 """Run action to collect Ceph quorum_status output."""
 import json
-import sys
 
 from subprocess import CalledProcessError
-
-sys.path.append('hooks')
 
 from ceph_ops import get_quorum_status
 from charmhelpers.core.hookenv import function_fail, function_get, function_set

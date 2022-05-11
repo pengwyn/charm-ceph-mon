@@ -26,16 +26,12 @@ from subprocess import (
     CalledProcessError,
 )
 
-import sys
-sys.path.append('lib')
-sys.path.append('hooks')
-
-
 from charmhelpers.core.hookenv import (
     function_get,
     log,
     function_fail
 )
+
 from charmhelpers.core.host import cmp_pkgrevno
 from charmhelpers.contrib.storage.linux import ceph
 from charms_ceph.utils import get_osd_weight

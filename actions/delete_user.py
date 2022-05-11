@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
-sys.path.append('hooks')
 from charmhelpers.core.hookenv import action_get, action_fail, action_set, log
 from subprocess import CalledProcessError, check_output, STDOUT
 

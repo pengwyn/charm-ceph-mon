@@ -2,23 +2,25 @@ type: charm
 
 parts:
   charm:
-    plugin: dump
-    source: .
     prime:
       - actions/*
-      - files/*
-      - hooks/*
       - lib/*
       - templates/*
-      - actions.yaml
-      - config.yaml
-      - copyright
-      - hardening.yaml
-      - icon.svg
-      - LICENSE
-      - Makefile
-      - metadata.yaml
-      - README.md
+    after:
+      - update-certificates
+    charm-python-packages:
+      # Use the updated version of setuptools (needed by jinja2).
+      - setuptools
+    build-packages:
+      - git
+
+  update-certificates:
+    # Ensure that certificates in the base image are up-to-date.
+    plugin: nil
+    override-build: |
+      apt update
+      apt install -y ca-certificates
+      update-ca-certificates
 
 bases:
   - build-on:

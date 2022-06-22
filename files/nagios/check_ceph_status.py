@@ -175,7 +175,7 @@ def check_ceph_status(args):
         print(message_all_ok)
         return message_all_ok
 
-    # if it is just --check_osds_down, deal with it and ignore overall health
+    # if it is just --check_num_osds, deal with it and ignore overall health
     if args.check_num_osds:
         osdmap = status_data['osdmap']['osdmap']
         num_osds = osdmap['num_osds']

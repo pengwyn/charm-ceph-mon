@@ -240,7 +240,8 @@ class CephHooksTestCase(test_utils.CharmTestCase):
             ceph_hooks.upgrade_charm()
         mocks["apt_install"].assert_called_with(
             "lockfile-progs", fatal=True)
-        mock_notify_radosgws.assert_called_once_with()
+        mock_notify_radosgws.assert_called_once_with(
+            reprocess_broker_requests=True)
         mock_ceph.update_monfs.assert_called_once_with()
         mock_notify_prometheus.assert_called_once_with()
         mock_service_pause.assert_called_with('ceph-create-keys')
@@ -255,9 +256,11 @@ class CephHooksTestCase(test_utils.CharmTestCase):
         ceph_hooks.notify_rbd_mirrors()
         mock_relation_ids.assert_called_once_with('rbd-mirror')
         mock_related_units.assert_called_once_with('arelid')
-        mock_rbd_mirror_relation.assert_called_once_with(relid='arelid',
-                                                         unit='aunit',
-                                                         recurse=False)
+        mock_rbd_mirror_relation.assert_called_once_with(
+            relid='arelid',
+            unit='aunit',
+            recurse=False,
+            reprocess_broker_requests=False)
 
     @patch.object(ceph_hooks, 'uuid')
     @patch.object(ceph_hooks, 'relation_set')
@@ -892,7 +895,7 @@ class RBDMirrorRelationTestCase(test_utils.CharmTestCase):
         ]
         ceph_hooks.rbd_mirror_relation('rbd-mirror:51', 'ceph-rbd-mirror/0')
         self.handle_broker_request.assert_called_with(
-            'rbd-mirror:51', 'ceph-rbd-mirror/0', recurse=True)
+            'rbd-mirror:51', 'ceph-rbd-mirror/0', recurse=True, force=False)
         self.relation_set.assert_called_with(
             relation_id='rbd-mirror:51',
             relation_settings=base_relation_settings)

@@ -139,7 +139,7 @@ class CephClientProvides(Object):
         return request_id in self._stored.processed
 
     def _handle_broker_request(
-            self, relation, unit, add_legacy_response=False):
+            self, relation, unit, add_legacy_response=False, force=False):
         """Retrieve broker request from relation, process, return response data.
 
         :param event: Operator event for the relation
@@ -149,6 +149,8 @@ class CephClientProvides(Object):
                                     new way.
         :type add_legacy_response: bool
         :returns: Dictionary of response data ready for use with relation_set.
+        :param force: Whether to re-process broker requests.
+        :type force: bool
         :rtype: dict
         """
         def _get_broker_req_id(request):
@@ -186,7 +188,7 @@ class CephClientProvides(Object):
                         broker_req_id))
                 return {}
 
-            if self._req_already_treated(broker_req_id):
+            if self._req_already_treated(broker_req_id) and not force:
                 logger.debug(
                     "Ignoring already executed broker request {}".format(
                         broker_req_id))

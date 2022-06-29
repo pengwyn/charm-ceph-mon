@@ -595,10 +595,10 @@ def attempt_mon_cluster_bootstrap():
     return True
 
 
-def notify_relations():
-    notify_osds()
-    notify_radosgws()
-    notify_rbd_mirrors()
+def notify_relations(reprocess_broker_requests=False):
+    notify_osds(reprocess_broker_requests=reprocess_broker_requests)
+    notify_radosgws(reprocess_broker_requests=reprocess_broker_requests)
+    notify_rbd_mirrors(reprocess_broker_requests=reprocess_broker_requests)
     notify_prometheus()
 
 
@@ -614,22 +614,29 @@ def notify_prometheus():
                                 module_enabled=module_enabled)
 
 
-def notify_osds():
+def notify_osds(reprocess_broker_requests=False):
     for relid in relation_ids('osd'):
         for unit in related_units(relid):
-            osd_relation(relid=relid, unit=unit)
+            osd_relation(
+                relid=relid, unit=unit,
+                reprocess_broker_requests=reprocess_broker_requests)
 
 
-def notify_radosgws():
+def notify_radosgws(reprocess_broker_requests=False):
     for relid in relation_ids('radosgw'):
         for unit in related_units(relid):
-            radosgw_relation(relid=relid, unit=unit)
+            radosgw_relation(
+                relid=relid, unit=unit,
+                reprocess_broker_requests=reprocess_broker_requests)
 
 
-def notify_rbd_mirrors():
+def notify_rbd_mirrors(reprocess_broker_requests=False):
     for relid in relation_ids('rbd-mirror'):
         for unit in related_units(relid):
-            rbd_mirror_relation(relid=relid, unit=unit, recurse=False)
+            rbd_mirror_relation(
+                relid=relid, unit=unit,
+                recurse=False,
+                reprocess_broker_requests=reprocess_broker_requests)
 
 
 def req_already_treated(request_id, relid, req_unit):
@@ -738,7 +745,7 @@ def retrieve_client_broker_requests():
 
 
 def handle_broker_request(relid, unit, add_legacy_response=False,
-                          recurse=True):
+                          recurse=True, force=False):
     """Retrieve broker request from relation, process, return response data.
 
     :param relid: Realtion ID
@@ -752,6 +759,9 @@ def handle_broker_request(relid, unit, add_legacy_response=False,
                     not.  Mainly used to handle recursion when called from
                     notify_rbd_mirrors()
     :type recurse: bool
+    :param force: Process broker requests even if they have already been
+                    processed.
+    :type force: bool
     :returns: Dictionary of response data ready for use with relation_set.
     :rtype: dict
     """
@@ -784,7 +794,7 @@ def handle_broker_request(relid, unit, add_legacy_response=False,
                 level=DEBUG)
             return {}
 
-        if req_already_treated(broker_req_id, relid, unit):
+        if req_already_treated(broker_req_id, relid, unit) and not force:
             log("Ignoring already executed broker request {}".format(
                 broker_req_id),
                 level=DEBUG)
@@ -820,7 +830,7 @@ def handle_broker_request(relid, unit, add_legacy_response=False,
 
 @hooks.hook('osd-relation-joined')
 @hooks.hook('osd-relation-changed')
-def osd_relation(relid=None, unit=None):
+def osd_relation(relid=None, unit=None, reprocess_broker_requests=False):
     if ceph.is_quorum():
         log('mon cluster in quorum - providing fsid & keys')
         public_addr = get_public_addr()
@@ -855,7 +865,8 @@ def osd_relation(relid=None, unit=None):
             )
         }
 
-        data.update(handle_broker_request(relid, unit))
+        data.update(handle_broker_request(
+            relid, unit, force=reprocess_broker_requests))
         relation_set(relation_id=relid,
                      relation_settings=data)
 
@@ -968,7 +979,7 @@ def dashboard_relation(relid=None):
 
 @hooks.hook('radosgw-relation-changed')
 @hooks.hook('radosgw-relation-joined')
-def radosgw_relation(relid=None, unit=None):
+def radosgw_relation(relid=None, unit=None, reprocess_broker_requests=False):
     # Install radosgw for admin tools
     apt_install(packages=filter_installed_packages(['radosgw']))
     if not unit:
@@ -997,13 +1008,16 @@ def radosgw_relation(relid=None, unit=None):
             # Old style global radosgw key
             data['radosgw_key'] = ceph.get_radosgw_key()
 
-        data.update(handle_broker_request(relid, unit))
+        data.update(handle_broker_request(
+            relid, unit, force=reprocess_broker_requests))
         relation_set(relation_id=relid, relation_settings=data)
 
 
 @hooks.hook('rbd-mirror-relation-joined')
 @hooks.hook('rbd-mirror-relation-changed')
-def rbd_mirror_relation(relid=None, unit=None, recurse=True):
+def rbd_mirror_relation(
+        relid=None, unit=None, recurse=True,
+        reprocess_broker_requests=False):
     '''
     Handle the rbd mirror relation
 
@@ -1029,7 +1043,8 @@ def rbd_mirror_relation(relid=None, unit=None, recurse=True):
             return ceph.list_pools_detail()
 
         # handle broker requests first to get a updated pool map
-        data = (handle_broker_request(relid, unit, recurse=recurse))
+        data = (handle_broker_request(
+            relid, unit, recurse=recurse, force=reprocess_broker_requests))
         data.update({
             'auth': 'cephx',
             'ceph-public-address': get_public_addr(),
@@ -1061,7 +1076,8 @@ def rbd_mirror_relation(relid=None, unit=None, recurse=True):
 
 @hooks.hook('mds-relation-changed')
 @hooks.hook('mds-relation-joined')
-def mds_relation_joined(relid=None, unit=None):
+def mds_relation_joined(
+        relid=None, unit=None, reprocess_broker_requests=False):
     if ready_for_service():
         log('mon cluster in quorum and osds bootstrapped '
             '- providing mds client with keys')
@@ -1078,7 +1094,9 @@ def mds_relation_joined(relid=None, unit=None):
                 ceph.get_mds_key(name=mds_name),
             'auth': 'cephx',
             'ceph-public-address': public_addr}
-        data.update(handle_broker_request(relid, unit))
+        data.update(
+            handle_broker_request(
+                relid, unit, force=reprocess_broker_requests))
         relation_set(relation_id=relid, relation_settings=data)
 
 
@@ -1131,7 +1149,7 @@ def upgrade_charm():
     # NOTE(jamespage):
     # Reprocess broker requests to ensure that any cephx
     # key permission changes are applied
-    notify_relations()
+    notify_relations(reprocess_broker_requests=True)
 
 
 @hooks.hook('nrpe-external-master-relation-joined')

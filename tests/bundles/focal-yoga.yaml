@@ -72,7 +72,8 @@ applications:
     channel: quincy/edge
 
   ceph-mon:
-    charm: ../../ceph-mon.charm
+    charm: ch:ceph-mon
+    channel: quincy/edge
     num_units: 3
     options:
       source: *openstack-origin

@@ -3,8 +3,6 @@ charm_name: ceph-mon
 gate_bundles:
   - focal-xena
   - focal-yoga
-
-dev_bundles:
   - jammy-yoga
 
 smoke_bundles:
@@ -30,6 +28,3 @@ tests:
   - zaza.openstack.charm_tests.ceph.tests.CephPrometheusTest
   # Tests from quincy.
   - zaza.openstack.charm_tests.ceph.tests.CephAuthTest
-tests_options:
-  force_deploy:
-    - jammy-yoga

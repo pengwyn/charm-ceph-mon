@@ -388,3 +388,15 @@ class CephUtilsTestCase(test_utils.CharmTestCase):
         is_mgr_module_enabled.return_value = False
         utils.set_balancer_mode('upmap')
         check_call.assert_not_called()
+
+    @mock.patch.object(utils.subprocess, 'check_call')
+    @mock.patch.object(utils, 'is_leader')
+    def test_disable_insecure_reclaim(self,
+                                      is_leader,
+                                      check_call):
+        is_leader.return_value = True
+        utils.try_disable_insecure_reclaim()
+        check_call.assert_called_once_with([
+            'ceph', '--id', 'admin',
+            'config', 'set', 'mon',
+            'auth_allow_insecure_global_id_reclaim', 'false'])

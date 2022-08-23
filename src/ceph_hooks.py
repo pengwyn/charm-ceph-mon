@@ -58,13 +58,10 @@ from charmhelpers.core.host import (
     cmp_pkgrevno)
 from charmhelpers.fetch import (
     apt_install,
-    apt_update,
-    apt_purge,
     filter_installed_packages,
     add_source,
     get_upstream_version,
 )
-from charmhelpers.payload.execd import execd_preinstall
 from charmhelpers.contrib.openstack.alternatives import install_alternative
 from charmhelpers.contrib.openstack.utils import (
     clear_unit_paused,
@@ -156,25 +153,6 @@ def check_for_upgrade():
                                          new_version,
                                          ceph.pretty_print_upgrade_paths()),
             level=ERROR)
-
-
-@hooks.hook('install.real')
-@harden()
-def install():
-    execd_preinstall()
-    add_source(config('source'), config('key'))
-    apt_update(fatal=True)
-    apt_install(packages=ceph.determine_packages(), fatal=True)
-    rm_packages = ceph.determine_packages_to_remove()
-    if rm_packages:
-        apt_purge(packages=rm_packages, fatal=True)
-    try:
-        # we defer and explicitly run `ceph-create-keys` from
-        # add_keyring_to_ceph() as part of bootstrap process
-        # LP: #1719436.
-        service_pause('ceph-create-keys')
-    except ValueError:
-        pass
 
 
 def get_ceph_context():

@@ -16,20 +16,14 @@
 
 import subprocess
 
-import charmhelpers.core.hookenv as hookenv
 
-
-def copy_pool():
+def copy_pool(event) -> None:
     try:
-        source = hookenv.action_get("source")
-        target = hookenv.action_get("target")
+        source = event.params.get("source")
+        target = event.params.get("target")
         subprocess.check_call([
             'rados', 'cppool',
             source, target
         ])
     except subprocess.CalledProcessError as e:
-        hookenv.action_fail("Error copying pool: {}".format(str(e)))
-
-
-if __name__ == '__main__':
-    copy_pool()
+        event.fail("Error copying pool: {}".format(str(e)))

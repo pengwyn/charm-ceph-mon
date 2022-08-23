@@ -12,24 +12,24 @@
 # limitations under the License.
 
 import unittest.mock as mock
+from ops.testing import Harness
 import subprocess
 
 import test_utils
 import create_crush_rule
-import copy_pool
+
+with mock.patch('charmhelpers.contrib.hardening.harden.harden') as mock_dec:
+    mock_dec.side_effect = (lambda *dargs, **dkwargs: lambda f:
+                            lambda *args, **kwargs: f(*args, **kwargs))
+    # src.charm imports ceph_hooks, so we need to workaround the inclusion
+    # of the 'harden' decorator.
+    from src.charm import CephMonCharm
 
 
 class CopyPoolTestCase(test_utils.CharmTestCase):
 
-    TO_PATCH = [
-        'hookenv',
-    ]
-
     def setUp(self):
-        super(CopyPoolTestCase, self).setUp(
-            copy_pool,
-            self.TO_PATCH
-        )
+        self.harness = Harness(CephMonCharm)
 
     @mock.patch.object(create_crush_rule.subprocess, 'check_call')
     def test_copy_pool(self, mock_check_call):
@@ -37,8 +37,9 @@ class CopyPoolTestCase(test_utils.CharmTestCase):
             'source': 'source-pool',
             'target': 'target-pool',
         }
-        self.hookenv.action_get.side_effect = lambda k: _action_data.get(k)
-        copy_pool.copy_pool()
+        self.harness.begin()
+        self.harness.charm.on_copy_pool_action(
+            test_utils.MockActionEvent(_action_data))
         mock_check_call.assert_called_with([
             'rados', 'cppool',
             'source-pool', 'target-pool',
@@ -50,14 +51,15 @@ class CopyPoolTestCase(test_utils.CharmTestCase):
             'source': 'source-pool',
             'target': 'target-pool',
         }
-        self.hookenv.action_get.side_effect = lambda k: _action_data.get(k)
+        self.harness.begin()
         mock_check_call.side_effect = subprocess.CalledProcessError(1, 'rados')
-        copy_pool.copy_pool()
+        event = test_utils.MockActionEvent(_action_data)
+        self.harness.charm.on_copy_pool_action(event)
         mock_check_call.assert_called_with([
             'rados', 'cppool',
             'source-pool', 'target-pool',
         ])
-        self.hookenv.action_fail.assert_called_once_with(mock.ANY)
+        event.fail.assert_called_once_with(mock.ANY)
 
 
 class CreateCrushRuleTestCase(test_utils.CharmTestCase):

@@ -93,6 +93,8 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
         self.metrics_endpoint = ceph_metrics.CephMetricsEndpointProvider(self)
         self._observe_action(self.on.change_osd_weight_action,
                              ops_actions.change_osd_weight.change_osd_weight)
+        self._observe_action(self.on.copy_pool_action,
+                             ops_actions.copy_pool.copy_pool)
 
         fw.observe(self.on.install, self.on_install)
         fw.observe(self.on.config_changed, self.on_config)

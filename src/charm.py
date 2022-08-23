@@ -7,6 +7,8 @@ import ops_openstack.core
 import ceph_hooks as hooks
 import ceph_metrics
 
+import ops_actions
+
 
 class CephMonCharm(ops_openstack.core.OSBaseCharm):
 
@@ -66,12 +68,31 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
     def on_nrpe_relation(self, event):
         hooks.upgrade_nrpe_config()
 
+    # Actions.
+
+    def _observe_action(self, on_action, callable):
+        def _make_method(fn):
+            return lambda _, event: fn(event)
+
+        method_name = 'on_' + str(on_action.event_kind)
+        method = _make_method(callable)
+        # In addition to being a method, the action callbacks _must_ have
+        # the same '__name__' as their attribute name (this is how lookups
+        # work in the operator framework world).
+        method.__name__ = method_name
+
+        inst = type(self)
+        setattr(inst, method_name, method)
+        self.framework.observe(on_action, getattr(self, method_name))
+
     def __init__(self, *args):
         super().__init__(*args)
         self._stored.is_started = True
         fw = self.framework
 
         self.metrics_endpoint = ceph_metrics.CephMetricsEndpointProvider(self)
+        self._observe_action(self.on.change_osd_weight_action,
+                             ops_actions.change_osd_weight.change_osd_weight)
 
         fw.observe(self.on.install, self.on_install)
         fw.observe(self.on.config_changed, self.on_config)

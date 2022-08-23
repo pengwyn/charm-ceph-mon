@@ -13,25 +13,29 @@
 
 """Tests for reweight_osd action."""
 
-from actions import change_osd_weight as action
 import unittest.mock as mock
-from test_utils import CharmTestCase
+from test_utils import CharmTestCase, MockActionEvent
+from ops.testing import Harness
+
+with mock.patch('charmhelpers.contrib.hardening.harden.harden') as mock_dec:
+    mock_dec.side_effect = (lambda *dargs, **dkwargs: lambda f:
+                            lambda *args, **kwargs: f(*args, **kwargs))
+    # src.charm imports ceph_hooks, so we need to workaround the inclusion
+    # of the 'harden' decorator.
+    from src.charm import CephMonCharm
 
 
 class ReweightTestCase(CharmTestCase):
     """Run tests for action."""
 
     def setUp(self):
-        """Init mocks for test cases."""
-        super(ReweightTestCase, self).setUp(
-            action, ["function_get", "function_fail"]
-        )
+        self.harness = Harness(CephMonCharm)
 
-    @mock.patch("actions.change_osd_weight.reweight_osd")
+    @mock.patch("ops_actions.change_osd_weight.ceph_utils.reweight_osd")
     def test_reweight_osd(self, _reweight_osd):
         """Test reweight_osd action has correct calls."""
         _reweight_osd.return_value = True
-        osd_num = 4
-        new_weight = 1.2
-        action.crush_reweight(osd_num, new_weight)
+        self.harness.begin()
+        self.harness.charm.on_change_osd_weight_action(
+            MockActionEvent({'osd': 4, 'weight': 1.2}))
         _reweight_osd.assert_has_calls([mock.call("4", "1.2")])

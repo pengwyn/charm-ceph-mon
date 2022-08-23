@@ -16,25 +16,26 @@
 
 """Changes the crush weight of an OSD."""
 
-from charmhelpers.core.hookenv import function_fail, function_get, log
-from charms_ceph.utils import reweight_osd
+import charms_ceph.utils as ceph_utils
+import logging
 
 
-def crush_reweight(osd_num, new_weight):
+logger = logging.getLogger(__name__)
+
+
+def change_osd_weight(event) -> None:
     """Run reweight_osd to change OSD weight."""
+    osd_num = event.params.get("osd")
+    new_weight = event.params.get("weight")
     try:
-        result = reweight_osd(str(osd_num), str(new_weight))
+        result = ceph_utils.reweight_osd(str(osd_num), str(new_weight))
     except Exception as e:
-        log(e)
-        function_fail("Reweight failed due to exception")
+        logger.warn(e)
+        event.fail("Reweight failed due to exception")
         return
 
     if not result:
-        function_fail("Reweight failed to complete")
+        event.fail("Reweight failed to complete")
         return
 
-
-if __name__ == "__main__":
-    osd_num = function_get("osd")
-    new_weight = function_get("weight")
-    crush_reweight(osd_num, new_weight)
+    event.set_results({'message': 'success'})

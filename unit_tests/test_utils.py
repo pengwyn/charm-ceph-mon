@@ -17,7 +17,7 @@ import unittest
 import os
 import yaml
 
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 
 def load_config():
@@ -157,3 +157,11 @@ class TestLeaderSettings(object):
         elif attr in self.settings:
             return self.settings[attr]
         return None
+
+
+class MockActionEvent:
+
+    def __init__(self, params={}):
+        self.params = params
+        self.fail = MagicMock()
+        self.set_results = MagicMock()

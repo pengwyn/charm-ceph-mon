@@ -36,6 +36,8 @@ provides:
     interface: ceph-rbd-mirror
   prometheus:
     interface: http
+  metrics-endpoint:
+    interface: prometheus_scrape
   dashboard:
     interface: ceph-dashboard
 requires:

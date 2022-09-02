@@ -5,6 +5,7 @@ from ops.main import main
 import ops_openstack.core
 
 import ceph_hooks as hooks
+import ceph_metrics
 
 
 class CephMonCharm(ops_openstack.core.OSBaseCharm):
@@ -69,6 +70,8 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
         super().__init__(*args)
         self._stored.is_started = True
         fw = self.framework
+
+        self.metrics_endpoint = ceph_metrics.CephMetricsEndpointProvider(self)
 
         fw.observe(self.on.install, self.on_install)
         fw.observe(self.on.config_changed, self.on_config)

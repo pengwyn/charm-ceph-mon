@@ -297,8 +297,7 @@ class CephUtilsTestCase(test_utils.CharmTestCase):
         releases = utils.get_ceph_osd_releases()
 
         self.assertEqual(len(releases), 2)
-        self.assertEqual(releases[0], ceph_release_1)
-        self.assertEqual(releases[1], ceph_release_2)
+        self.assertEqual(sorted(releases), [ceph_release_1, ceph_release_2])
 
     @mock.patch.object(utils.subprocess, 'check_output')
     @mock.patch.object(utils.json, 'loads')

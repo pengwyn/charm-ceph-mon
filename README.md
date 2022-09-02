@@ -140,6 +140,9 @@ The charm supports Ceph metric monitoring with Prometheus. Add relations to the
 > **Note**: Prometheus support is available starting with Ceph Luminous
   (xenial-queens UCA pocket).
 
+Alternatively, integration with the [COS Lite][cos-lite] observability
+stack is available via the metrics-endpoint relation.
+
 ## Actions
 
 This section lists Juju [actions][juju-docs-actions] supported by the charm.
@@ -224,3 +227,4 @@ For general charm questions refer to the OpenStack [Charm Guide][cg].
 [cloud-archive-ceph]: https://wiki.ubuntu.com/OpenStack/CloudArchive#Ceph_and_the_UCA
 [upstream-ceph-buckets]: https://docs.ceph.com/docs/master/rados/operations/crush-map/#types-and-buckets
 [jq]: https://stedolan.github.io/jq/
+[cos-lite]: https://charmhub.io/cos-lite

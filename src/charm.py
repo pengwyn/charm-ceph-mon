@@ -2,7 +2,11 @@
 
 from ops.main import main
 
+import charms.operator_libs_linux.v0.apt as apt
+import charms.operator_libs_linux.v1.systemd as systemd
+
 import ops_openstack.core
+import charms_ceph.utils as ceph
 
 import ceph_hooks as hooks
 import ceph_metrics
@@ -12,9 +16,29 @@ import ops_actions
 
 class CephMonCharm(ops_openstack.core.OSBaseCharm):
 
+    release = 'quincy'
+
+    PACKAGES = [
+        'ceph', 'gdisk',
+        'radosgw', 'lvm2', 'parted', 'smartmontools',
+    ]
+
     # General charm control callbacks.
+
+    # TODO: Figure out how to do hardening in an operator-framework
+    # world
     def on_install(self, event):
-        hooks.install()
+        self.install_pkgs()
+        rm_packages = ceph.determine_packages_to_remove()
+        if rm_packages:
+            apt.remove_package(packages=rm_packages, fatal=True)
+        try:
+            # we defer and explicitly run `ceph-create-keys` from
+            # add_keyring_to_ceph() as part of bootstrap process
+            # LP: #1719436.
+            systemd.service_pause('ceph-create-keys')
+        except systemd.SystemdError:
+            pass
 
     def on_config(self, event):
         hooks.config_changed()

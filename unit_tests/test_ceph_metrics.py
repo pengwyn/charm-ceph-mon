@@ -55,8 +55,10 @@ class TestCephMetrics(unittest.TestCase):
     @patch("ceph_metrics.ceph_utils.is_bootstrapped", return_value=True)
     @patch("ceph_metrics.ceph_utils.is_mgr_module_enabled", return_value=False)
     @patch("ceph_metrics.ceph_utils.mgr_enable_module")
-    def test_add_rel(
+    @patch("ceph_metrics.ceph_utils.mgr_disable_module")
+    def test_add_remove_rel(
         self,
+        mgr_disable_module,
         mgr_enable_module,
         _is_mgr_module_enable,
         _is_bootstrapped,
@@ -89,3 +91,6 @@ class TestCephMetrics(unittest.TestCase):
                 '"static_configs": [{"targets": ["*:9283"]}]}]'
             ),
         )
+
+        self.harness.remove_relation(rel_id)
+        mgr_disable_module.assert_called_once()

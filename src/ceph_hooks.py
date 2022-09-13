@@ -418,10 +418,13 @@ def bootstrap_source_relation_changed():
             'prometheus-relation-changed')
 def prometheus_relation(relid=None, unit=None, prometheus_permitted=None,
                         module_enabled=None):
+    log("DEPRECATION warning: relating to the prometheus2 machine charm is "
+        "deprecated in favor of COS Lite", level=INFO)
     if not ceph.is_bootstrapped():
         return
     if prometheus_permitted is None:
         prometheus_permitted = cmp_pkgrevno('ceph', '12.2.0') >= 0
+
     if module_enabled is None:
         module_enabled = (is_mgr_module_enabled('prometheus') or
                           mgr_enable_module('prometheus'))

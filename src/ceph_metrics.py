@@ -39,6 +39,10 @@ class CephMetricsEndpointProvider(prometheus_scrape.MetricsEndpointProvider):
             alert_rules_path=alert_rules_path,
             refresh_event=refresh_event,
         )
+        events = charm.on[relation_name]
+        self.framework.observe(
+            events.relation_departed, self._on_relation_departed
+        )
 
     def _on_relation_changed(self, event):
         """Enable prometheus on relation change"""
@@ -49,3 +53,13 @@ class CephMetricsEndpointProvider(prometheus_scrape.MetricsEndpointProvider):
             ceph_utils.mgr_enable_module("prometheus")
             logger.debug("module_enabled")
             super()._on_relation_changed(event)
+
+    def _on_relation_departed(self, event):
+        """Disable prometheus on depart of relation"""
+        if self._charm.unit.is_leader() and ceph_utils.is_bootstrapped():
+            logger.debug(
+                "is_leader and is_bootstrapped, running rel departed: %s",
+                event,
+            )
+            ceph_utils.mgr_disable_module("prometheus")
+            logger.debug("module_disabled")

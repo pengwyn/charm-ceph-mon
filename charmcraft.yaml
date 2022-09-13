@@ -6,6 +6,7 @@ parts:
       - actions/*
       - lib/*
       - templates/*
+      - files/*
     after:
       - update-certificates
     charm-python-packages:

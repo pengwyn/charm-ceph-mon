@@ -90,7 +90,7 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
         hooks.client_relation()
 
     def on_nrpe_relation(self, event):
-        hooks.upgrade_nrpe_config()
+        hooks.update_nrpe_config()
 
     # Actions.
 

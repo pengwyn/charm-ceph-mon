@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import logging
 
 from ops.main import main
 
@@ -109,9 +110,21 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
         setattr(inst, method_name, method)
         self.framework.observe(on_action, getattr(self, method_name))
 
+    def is_blocked_insecure_cmr(self):
+        remote_block = False
+        remote_unit_name = hooks.remote_unit()
+        if remote_unit_name and hooks.is_cmr_unit(remote_unit_name):
+            remote_block = not self.config['permit-insecure-cmr']
+        return remote_block
+
     def __init__(self, *args):
         super().__init__(*args)
         self._stored.is_started = True
+
+        if self.is_blocked_insecure_cmr():
+            logging.error("Not running hook, CMR detected and not supported")
+            return
+
         fw = self.framework
 
         self.metrics_endpoint = ceph_metrics.CephMetricsEndpointProvider(self)
@@ -182,3 +195,4 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
 
 if __name__ == '__main__':
     main(CephMonCharm)
+    hooks.assess_status()

@@ -1235,7 +1235,7 @@ def is_unsupported_cmr(unit_name):
     return unsupported
 
 
-def assess_status():
+def assess_status(charm=None):
     '''Assess status of current unit'''
     application_version_set(get_upstream_version(VERSION_PACKAGE))
     if not config('permit-insecure-cmr'):
@@ -1289,6 +1289,9 @@ def assess_status():
         get_osd_settings('client')
     except OSD_SETTING_EXCEPTIONS as e:
         status_set('blocked', str(e))
+        return
+
+    if charm is not None and charm.metrics_endpoint.assess_alert_rule_errors():
         return
 
     # active - bootstrapped + quorum status check

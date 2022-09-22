@@ -5,9 +5,16 @@
 
 Configure prometheus scrape jobs via the metrics-endpoint relation.
 """
+import json
 import logging
+import os.path
+import pathlib
 from typing import Optional, Union, List
 
+import ops.model
+from ops.model import BlockedStatus
+
+import charm
 from charms.prometheus_k8s.v0 import prometheus_scrape
 from charms_ceph import utils as ceph_utils
 from ops.framework import BoundEvent
@@ -19,15 +26,16 @@ DEFAULT_CEPH_JOB = {
     "metrics_path": "/metrics",
     "static_configs": [{"targets": ["*:9283"]}],
 }
+DEFAULT_ALERT_RULES_RELATIVE_PATH = "files/prometheus_alert_rules"
 
 
 class CephMetricsEndpointProvider(prometheus_scrape.MetricsEndpointProvider):
     def __init__(
         self,
-        charm,
+        charm: charm.CephMonCharm,
         relation_name: str = prometheus_scrape.DEFAULT_RELATION_NAME,
         jobs=None,
-        alert_rules_path: str = prometheus_scrape.DEFAULT_ALERT_RULES_RELATIVE_PATH,  # noqa
+        alert_rules_path: str = DEFAULT_ALERT_RULES_RELATIVE_PATH,
         refresh_event: Optional[Union[BoundEvent, List[BoundEvent]]] = None,
     ):
         if jobs is None:
@@ -43,6 +51,11 @@ class CephMetricsEndpointProvider(prometheus_scrape.MetricsEndpointProvider):
         self.framework.observe(
             events.relation_departed, self._on_relation_departed
         )
+        self.framework.observe(
+            self.on.alert_rule_status_changed,
+            self._on_alert_rule_status_changed,
+        )
+        charm._stored.set_default(alert_rule_errors=None)
 
     def _on_relation_changed(self, event):
         """Enable prometheus on relation change"""
@@ -63,3 +76,64 @@ class CephMetricsEndpointProvider(prometheus_scrape.MetricsEndpointProvider):
             )
             ceph_utils.mgr_disable_module("prometheus")
             logger.debug("module_disabled")
+            # We're not related to prom, don't care about alert rules
+            self._charm._stored.alert_rule_errors = None
+
+    def assess_alert_rule_errors(self):
+        if self._charm._stored.alert_rule_errors:
+            self._charm.unit.status = BlockedStatus(
+                "invalid alert rules, check unit logs"
+            )
+            return True
+
+    def _on_alert_rule_status_changed(self, event):
+        logger.debug(
+            "alert rule status changed: %s, %s, %s",
+            event,
+            event.valid,
+            event.errors,
+        )
+        if event.errors:
+            logger.warning("invalid alert rules: %s", event.errors)
+            self._charm._stored.alert_rule_errors = event.errors
+        else:
+            self._charm._stored.alert_rule_errors = None
+
+    def get_alert_rules_resource(self):
+        try:
+            return self._charm.model.resources.fetch("alert-rules")
+        except ops.model.ModelError as e:
+            logger.warning("can't get alert-rules resource: %s", e)
+
+    def _set_alert_rules(self, rules_dict):
+        logger.debug("set alert rules: %s", rules_dict)
+        # alert rules seem ok locally, clear any errors
+        # prometheus may still signal alert rule errors
+        # via the relation though
+        self._charm._stored.alert_rule_errors = None
+
+        for relation in self._charm.model.relations[self._relation_name]:
+            relation.data[self._charm.app]["alert_rules"] = json.dumps(
+                rules_dict
+            )
+
+    def update_alert_rules(self):
+        if self._charm.unit.is_leader() and ceph_utils.is_bootstrapped():
+            resource = self.get_alert_rules_resource()
+            if resource is None or not os.path.getsize(resource):
+                logger.debug("empty rules resource, clearing alert rules")
+                self._set_alert_rules({})
+                return
+            sink = pathlib.Path(self._alert_rules_path) / "alert.yaml.rules"
+            if sink.exists():
+                sink.unlink()
+            sink.symlink_to(resource)
+            alert_rules = prometheus_scrape.AlertRules(topology=self.topology)
+            alert_rules.add_path(str(sink), recursive=True)
+            alert_rules_as_dict = alert_rules.as_dict()
+            if not alert_rules_as_dict:
+                msg = "invalid alert rules: {}".format(sink.open().read())
+                logger.warning(msg)
+                self._charm._stored.alert_rule_errors = msg
+                return
+            self._set_alert_rules(alert_rules_as_dict)

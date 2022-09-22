@@ -43,3 +43,8 @@ provides:
 requires:
   bootstrap-source:
     interface: ceph-bootstrap
+resources:
+  alert-rules:
+    type: file
+    filename: alert.yaml.rules
+    description: "Alerting rules"

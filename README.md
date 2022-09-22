@@ -143,6 +143,16 @@ The charm supports Ceph metric monitoring with Prometheus. Add relations to the
 Alternatively, integration with the [COS Lite][cos-lite] observability
 stack is available via the metrics-endpoint relation.
 
+Relating to prometheus-k8s via the metrics-endpoint interface (as is
+found in the [COS Lite][cos-lite] bundle) will send metrics to
+prometheus. Additionally, alerting rules will be configured for
+prometheus as well. Alerting rules are configured as a resource
+`alert-rules`; the default rules are taken from [upstream ceph
+rules][ceph-rules]. It is possible to replace the default with
+customized rules by attaching a resource:
+
+    juju attach ceph-mon alert-rules=./my-prom-alerts.yaml.rules
+
 ## Actions
 
 This section lists Juju [actions][juju-docs-actions] supported by the charm.
@@ -228,3 +238,4 @@ For general charm questions refer to the OpenStack [Charm Guide][cg].
 [upstream-ceph-buckets]: https://docs.ceph.com/docs/master/rados/operations/crush-map/#types-and-buckets
 [jq]: https://stedolan.github.io/jq/
 [cos-lite]: https://charmhub.io/cos-lite
+[ceph-rules]: https://github.com/ceph/ceph/blob/351e1ac63950164ea5f08a6bfc7c14af586bb208/monitoring/ceph-mixin/prometheus_alerts.yml

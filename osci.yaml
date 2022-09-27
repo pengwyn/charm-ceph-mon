@@ -8,6 +8,7 @@
       needs_charm_build: true
       charm_build_name: ceph-mon
       build_type: charmcraft
+      charmcraft_channel: 2.0/stable
     check:
       jobs:
         - new-install-focal-yoga

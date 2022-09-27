@@ -252,6 +252,12 @@ def update_host_osd_count_report(reset=False):
 @hooks.hook('config-changed')
 @harden()
 def config_changed():
+    '''
+    Handle config-changed
+
+    :returns: Whether or not relations should be notified after completion.
+    :rtype: bool
+    '''
     # Get the cfg object so we can see if the no-bootstrap value has changed
     # and triggered this hook invocation
     cfg = config()
@@ -341,8 +347,7 @@ def config_changed():
         try_disable_insecure_reclaim()
     for relid in relation_ids('dashboard'):
         dashboard_relation(relid)
-    # Update client relations
-    notify_client()
+    return True
 
 
 def get_mon_hosts():
@@ -393,6 +398,10 @@ def bootstrap_source_relation_changed():
     the ceph-mon charm. This relation is used to exchange the remote
     ceph-public-addresses which are used for the mon's, the fsid, and the
     monitor-secret.
+
+    :returns: Whether or not relations should be notified after completion.
+    :rtype: bool
+    ''
     """
     if not config('no-bootstrap'):
         status_set('blocked', 'Cannot join the bootstrap-source relation when '
@@ -445,7 +454,7 @@ def bootstrap_source_relation_changed():
     # The leader unit needs to bootstrap itself as it won't receive the
     # leader-settings-changed hook elsewhere.
     if curr_fsid:
-        mon_relation()
+        return mon_relation()
 
 
 @hooks.hook('prometheus-relation-joined',
@@ -488,6 +497,12 @@ def prometheus_left():
             'leader-settings-changed',
             'bootstrap-source-relation-departed')
 def mon_relation():
+    '''
+    Handle the mon relation
+
+    :returns: Whether or not relations should be notified after completion.
+    :rtype: bool
+    '''
     if leader_get('monitor-secret') is None:
         log('still waiting for leader to setup keys')
         status_set('waiting', 'Waiting for leader to setup keys')
@@ -503,9 +518,11 @@ def mon_relation():
             # the unit handling the broker request will update a nonce on the
             # mon relation.
             notify_relations()
+            return True
         else:
             if attempt_mon_cluster_bootstrap():
                 notify_relations()
+                return True
     else:
         log('Not enough mons ({}), punting.'
             .format(len(get_mon_hosts())))
@@ -578,7 +595,6 @@ def attempt_mon_cluster_bootstrap():
 def notify_relations():
     notify_osds()
     notify_radosgws()
-    notify_client()
     notify_rbd_mirrors()
     notify_prometheus()
 
@@ -611,79 +627,6 @@ def notify_rbd_mirrors():
     for relid in relation_ids('rbd-mirror'):
         for unit in related_units(relid):
             rbd_mirror_relation(relid=relid, unit=unit, recurse=False)
-
-
-def _get_ceph_info_from_configs():
-    """Create dictionary of ceph information required to set client relation.
-
-    :returns: Dictionary of ceph configurations needed for client relation
-    :rtpe: dict
-    """
-    public_addr = get_public_addr()
-    rbd_features = get_rbd_features()
-    data = {
-        'auth': 'cephx',
-        'ceph-public-address': public_addr
-    }
-    if rbd_features:
-        data['rbd-features'] = rbd_features
-    return data
-
-
-def _handle_client_relation(relid, unit, data=None):
-    """Handle broker request and set the relation data
-
-    :param relid: Relation ID
-    :type relid: str
-    :param unit: Unit name
-    :type unit: str
-    :param data: Initial relation data
-    :type data: dict
-    """
-    if data is None:
-        data = {}
-
-    if is_unsupported_cmr(unit):
-        return
-    data.update(
-        handle_broker_request(relid, unit, add_legacy_response=True))
-    relation_set(relation_id=relid, relation_settings=data)
-
-
-def notify_client():
-    send_osd_settings()
-    if not ready_for_service():
-        log("mon cluster is not in quorum, skipping notify_client",
-            level=WARNING)
-        return
-
-    for relid in relation_ids('client'):
-        data = _get_ceph_info_from_configs()
-
-        service_name = None
-        # Loop through all related units until client application name is found
-        # This is done in seperate loop to avoid calling ceph to retreive named
-        # key for every unit
-        for unit in related_units(relid):
-            service_name = get_client_application_name(relid, unit)
-            if service_name:
-                data.update({'key': ceph.get_named_key(service_name)})
-                break
-
-        if not service_name:
-            log('Unable to determine remote service name, deferring processing'
-                ' of broker requests for relation {} '.format(relid))
-            # continue with next relid
-            continue
-
-        for unit in related_units(relid):
-            _handle_client_relation(relid, unit, data)
-
-    for relid in relation_ids('admin'):
-        admin_relation_joined(relid)
-    for relid in relation_ids('mds'):
-        for unit in related_units(relid):
-            mds_relation_joined(relid=relid, unit=unit)
 
 
 def req_already_treated(request_id, relid, req_unit):
@@ -911,7 +854,6 @@ def osd_relation(relid=None, unit=None):
         # NOTE: radosgw key provision is gated on presence of OSD
         #       units so ensure that any deferred hooks are processed
         notify_radosgws()
-        notify_client()
         notify_rbd_mirrors()
         send_osd_settings()
 
@@ -1036,6 +978,16 @@ def radosgw_relation(relid=None, unit=None):
 @hooks.hook('rbd-mirror-relation-joined')
 @hooks.hook('rbd-mirror-relation-changed')
 def rbd_mirror_relation(relid=None, unit=None, recurse=True):
+    '''
+    Handle the rbd mirror relation
+
+    :param recurse: Whether we should call out to update relation functions or
+                    not.  Mainly used to handle recursion when called from
+                    notify_rbd_mirrors()
+    :type recurse: bool
+    :returns: Whether or not relations should be notified after completion.
+    :rtype: bool
+    '''
     if ready_for_service():
         log('mon cluster in quorum and osds bootstrapped '
             '- providing rbd-mirror client with keys')
@@ -1071,7 +1023,7 @@ def rbd_mirror_relation(relid=None, unit=None, recurse=True):
         # make sure clients are updated with the appropriate RBD features
         # bitmap.
         if recurse:
-            notify_client()
+            return True
 
 
 @hooks.hook('mds-relation-changed')
@@ -1115,26 +1067,6 @@ def admin_relation_joined(relid=None):
                 }
         relation_set(relation_id=relid,
                      relation_settings=data)
-
-
-@hooks.hook('client-relation-changed')
-@hooks.hook('client-relation-joined')
-def client_relation(relid=None, unit=None):
-    send_osd_settings()
-    if ready_for_service():
-        log('mon cluster in quorum and osds bootstrapped '
-            '- providing client with keys, processing broker requests')
-        if not unit:
-            unit = remote_unit()
-        service_name = get_client_application_name(relid, unit)
-        if not service_name:
-            log('Unable to determine remote service name, deferring '
-                'processing of broker requests  for relation {} '
-                'remote unit {}'.format(relid, unit))
-            return
-        data = _get_ceph_info_from_configs()
-        data.update({'key': ceph.get_named_key(service_name)})
-        _handle_client_relation(relid, unit, data)
 
 
 @hooks.hook('upgrade-charm.real')

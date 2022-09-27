@@ -24,11 +24,13 @@ class TestCephCharm(unittest.TestCase):
         self.assertTrue(self.harness.charm.metrics_endpoint)
         self.assertTrue(self.harness.charm.ceph_status)
 
+    @patch.object(charm.ceph_client.CephClientProvides, 'notify_all')
     @patch("charm.hooks")
-    def test_on_config_changed(self, hooks):
+    def test_on_config_changed(self, hooks, _notify_all):
         self.harness.update_config({"permit-insecure-cmr": None})
         hooks.config_changed.assert_called()
 
+    @patch.object(charm.ceph_client.CephClientProvides, 'notify_all')
     @patch("charm.ops_openstack.core.apt_install")
     @patch("charm.ops_openstack.core.apt_update")
     @patch("charm.ops_openstack.core.add_source")
@@ -45,6 +47,7 @@ class TestCephCharm(unittest.TestCase):
         _add_source,
         apt_update,
         apt_install,
+        _notify_all
     ):
         self.harness.update_config({"permit-insecure-cmr": None})
         self.harness.charm.on.install.emit()

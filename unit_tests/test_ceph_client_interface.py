@@ -111,16 +111,16 @@ class CephClientTestCase(CharmTestCase):
             {'broker_req': '{"request-id": "req"}'})
         mock_process_broker_request.assert_not_called()
 
-    @mock.patch("src.charm.hooks.mds_relation_joined")
     @mock.patch("src.charm.ceph_client.ceph.get_named_key")
     @mock.patch("src.charm.ceph_client.get_rbd_features")
     @mock.patch("src.charm.ceph_client.get_public_addr")
     @mock.patch.object(CephMonCharm, "ready_for_service")
     @mock.patch("src.charm.ceph_client.send_osd_settings")
+    @mock.patch("src.charm.ceph_mds.leader_get", return_value="testfsid")
+    @mock.patch("src.charm.ceph_mds.ceph")
     def test_notify_clients(
-            self, _send_osd_settings, mock_ready_for_service,
-            mock_get_public_addr, mock_get_rbd_features, mock_get_named_key,
-            mock_mds_relation_joined):
+            self, _ceph, _leader, _send_osd_settings, mock_ready_for_service,
+            mock_get_public_addr, mock_get_rbd_features, mock_get_named_key):
         mock_get_public_addr.return_value = '127.0.0.1'
         mock_ready_for_service.return_value = True
         mock_get_rbd_features.return_value = None
@@ -153,6 +153,4 @@ class CephClientTestCase(CharmTestCase):
                 'key': 'test key',
                 'rbd-features': '42',
             })
-
-        mock_mds_relation_joined.assert_called_with(
-            relid='1', unit='ceph-fs/0')
+        self.assertEqual(self.harness.charm.mds._mds_name, "ceph-fs")

@@ -4,6 +4,8 @@ import logging
 from ops.main import main
 
 import ceph_status
+import ceph_mds
+
 import charms.operator_libs_linux.v0.apt as apt
 import charms.operator_libs_linux.v1.systemd as systemd
 
@@ -111,9 +113,6 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
         if hooks.rbd_mirror_relation():
             self.on.notify_clients.emit()
 
-    def on_mds_relation(self, event):
-        hooks.mds_relation_joined()
-
     def on_admin_relation(self, event):
         hooks.admin_relation_joined()
 
@@ -149,13 +148,9 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
 
     def notify_clients(self, _event):
         self.clients.notify_all()
+        self.mds.notify_all()
         for relation in self.model.relations['admin']:
             hooks.admin_relation_joined(str(relation.id))
-
-        for relation in self.model.relations['mds']:
-            for unit in relation.units:
-                hooks.mds_relation_joined(
-                    relid=str(relation.id), unit=unit.name)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -171,6 +166,7 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
         self.clients = ceph_client.CephClientProvides(self)
         self.metrics_endpoint = ceph_metrics.CephMetricsEndpointProvider(self)
         self.ceph_status = ceph_status.StatusAssessor(self)
+        self.mds = ceph_mds.CephMdsProvides(self)
 
         self._observe_action(self.on.change_osd_weight_action,
                              ops_actions.change_osd_weight.change_osd_weight)
@@ -222,11 +218,6 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
                    self.on_rbd_mirror_relation)
         fw.observe(self.on.rbd_mirror_relation_joined,
                    self.on_rbd_mirror_relation)
-
-        fw.observe(self.on.mds_relation_changed,
-                   self.on_mds_relation)
-        fw.observe(self.on.mds_relation_joined,
-                   self.on_mds_relation)
 
         fw.observe(self.on.admin_relation_changed,
                    self.on_admin_relation)

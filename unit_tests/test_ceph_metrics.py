@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
+# Copyright 2022 Canonical Ltd.
+# See LICENSE file for licensing details.
+
 import json
 import pathlib
 import tempfile
 import textwrap
 
-# Copyright 2022 Canonical Ltd.
-# See LICENSE file for licensing details.
-
 from unittest.mock import patch
 import unittest
 
-from ops import storage, model, framework
-from ops.testing import Harness, _TestingModelBackend
+from ops.testing import Harness
 
 import ceph_metrics  # noqa: avoid circ. import
 import charm
+import helpers
 
 
+@helpers.patch_network_get()
 class TestCephMetrics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -40,35 +41,7 @@ class TestCephMetrics(unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.harness = Harness(charm.CephMonCharm)
-
-        # BEGIN: Workaround until network_get is implemented
-        class _TestingOPSModelBackend(_TestingModelBackend):
-            def network_get(self, endpoint_name, relation_id=None):
-                network_data = {
-                    "bind-addresses": [
-                        {
-                            "addresses": [{"value": "10.0.0.10"}],
-                        }
-                    ],
-                }
-                return network_data
-
-        self.harness._backend = _TestingOPSModelBackend(
-            self.harness._unit_name, self.harness._meta
-        )
-        self.harness._model = model.Model(
-            self.harness._meta, self.harness._backend
-        )
-        self.harness._framework = framework.Framework(
-            storage.SQLiteStorage(":memory:"),
-            self.harness._charm_dir,
-            self.harness._meta,
-            self.harness._model,
-        )
-        # END Workaround
-
         self.addCleanup(self.harness.cleanup)
-
         self.harness.begin()
         self.harness.set_leader(True)
         self.harness.charm.metrics_endpoint._alert_rules_path = self.rules_dir
@@ -131,7 +104,9 @@ class TestCephMetrics(unittest.TestCase):
     @patch("ceph_metrics.ceph_utils.is_bootstrapped", return_value=True)
     @patch("ceph_metrics.CephMetricsEndpointProvider._set_alert_rules")
     def test_update_alert_rules_empty(
-        self, set_alert_rules, _is_bootstrapped,
+        self,
+        set_alert_rules,
+        _is_bootstrapped,
     ):
         """Test: no alert rules created with empty alert rules file."""
         rel_id = self.harness.add_relation("metrics-endpoint", "prometheus")

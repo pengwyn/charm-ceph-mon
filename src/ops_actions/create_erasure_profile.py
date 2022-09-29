@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2016 Canonical Ltd
+# Copyright 2022 Canonical Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,16 +17,18 @@
 from subprocess import CalledProcessError
 
 from charmhelpers.contrib.storage.linux.ceph import create_erasure_profile
-from charmhelpers.core.hookenv import action_get, log, action_fail
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-def make_erasure_profile():
-    name = action_get("name")
-    plugin = action_get("plugin")
-    failure_domain = action_get("failure-domain")
-    device_class = action_get("device-class")
-    k = action_get("data-chunks")
-    m = action_get("coding-chunks")
+def create_erasure_profile_action(event):
+    name = event.params.get("name")
+    plugin = event.params.get("plugin")
+    failure_domain = event.params.get("failure-domain")
+    device_class = event.params.get("device-class")
+    k = event.params.get("data-chunks")
+    m = event.params.get("coding-chunks")
 
     # jerasure requires k+m
     # isa requires k+m
@@ -43,9 +45,9 @@ def make_erasure_profile():
                                    failure_domain=failure_domain,
                                    device_class=device_class)
         except CalledProcessError as e:
-            log(e)
-            action_fail("Create erasure profile failed with "
-                        "message: {}".format(str(e)))
+            logger.warning(e)
+            event.fail("Create erasure profile failed with "
+                       "message: {}".format(str(e)))
     elif plugin == "isa":
         try:
             create_erasure_profile(service='admin',
@@ -56,12 +58,12 @@ def make_erasure_profile():
                                    failure_domain=failure_domain,
                                    device_class=device_class)
         except CalledProcessError as e:
-            log(e)
-            action_fail("Create erasure profile failed with "
-                        "message: {}".format(str(e)))
+            logger.warning(e)
+            event.fail("Create erasure profile failed with "
+                       "message: {}".format(str(e)))
     elif plugin == "lrc":
-        locality_chunks = action_get("locality-chunks")
-        crush_locality = action_get('crush-locality')
+        locality_chunks = event.params.get("locality-chunks")
+        crush_locality = event.params.get('crush-locality')
         try:
             create_erasure_profile(service='admin',
                                    erasure_plugin_name=plugin,
@@ -73,11 +75,11 @@ def make_erasure_profile():
                                    failure_domain=failure_domain,
                                    device_class=device_class)
         except CalledProcessError as e:
-            log(e)
-            action_fail("Create erasure profile failed with "
-                        "message: {}".format(str(e)))
+            logger.warning(e)
+            event.fail("Create erasure profile failed with "
+                       "message: {}".format(str(e)))
     elif plugin == "shec":
-        c = action_get("durability-estimator")
+        c = event.params.get("durability-estimator")
         try:
             create_erasure_profile(service='admin',
                                    erasure_plugin_name=plugin,
@@ -88,12 +90,12 @@ def make_erasure_profile():
                                    failure_domain=failure_domain,
                                    device_class=device_class)
         except CalledProcessError as e:
-            log(e)
-            action_fail("Create erasure profile failed with "
-                        "message: {}".format(str(e)))
+            logger.warning(e)
+            event.fail("Create erasure profile failed with "
+                       "message: {}".format(str(e)))
     elif plugin == "clay":
-        d = action_get("helper-chunks")
-        scalar_mds = action_get('scalar-mds')
+        d = event.params.get("helper-chunks")
+        scalar_mds = event.params.get('scalar-mds')
         try:
             create_erasure_profile(service='admin',
                                    erasure_plugin_name=plugin,
@@ -105,15 +107,11 @@ def make_erasure_profile():
                                    failure_domain=failure_domain,
                                    device_class=device_class)
         except CalledProcessError as e:
-            log(e)
-            action_fail("Create erasure profile failed with "
-                        "message: {}".format(str(e)))
+            logger.warning(e)
+            event.fail("Create erasure profile failed with "
+                       "message: {}".format(str(e)))
     else:
         # Unknown erasure plugin
-        action_fail("Unknown erasure-plugin type of {}. "
-                    "Only jerasure, isa, lrc, shec or clay is "
-                    "allowed".format(plugin))
-
-
-if __name__ == '__main__':
-    make_erasure_profile()
+        event.fail("Unknown erasure-plugin type of {}. "
+                   "Only jerasure, isa, lrc, shec or clay is "
+                   "allowed".format(plugin))

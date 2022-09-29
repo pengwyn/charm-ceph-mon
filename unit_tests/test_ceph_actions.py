@@ -129,3 +129,104 @@ class CreateCrushRuleTestCase(test_utils.CharmTestCase):
         mock_check_call.assert_called_once_with(expected)
         event.fail.assert_called_once_with(
             'rule creation failed due to exception')
+
+
+class CreateErasureProfileTestCase(test_utils.CharmTestCase):
+    """Run tests for action."""
+
+    def setUp(self):
+        self.harness = Harness(CephMonCharm)
+        self.addCleanup(self.harness.cleanup)
+
+    @mock.patch('ops_actions.create_erasure_profile.create_erasure_profile')
+    def test_create_jerasure_profile(self, mock_create_erasure_profile):
+        self.harness.begin()
+        self.harness.charm.on_create_erasure_profile_action(
+            test_utils.MockActionEvent({
+                'name': 'erasure',
+                'plugin': 'jerasure',
+                'failure-domain': 'disk',
+                'k': 6,
+                'm': 3,
+            }))
+        mock_create_erasure_profile.assert_called_once_with(
+            service='admin', erasure_plugin_name='jerasure',
+            profile_name='erasure', data_chunks=None,
+            coding_chunks=None, failure_domain='disk', device_class=None
+        )
+
+    @mock.patch('ops_actions.create_erasure_profile.create_erasure_profile')
+    def test_create_isa_profile(self, mock_create_erasure_profile):
+        self.harness.begin()
+        self.harness.charm.on_create_erasure_profile_action(
+            test_utils.MockActionEvent({
+                'name': 'erasure',
+                'plugin': 'isa',
+                'failure-domain': 'disk',
+                'k': 6,
+                'm': 3,
+            }))
+        mock_create_erasure_profile.assert_called_once_with(
+            service='admin', erasure_plugin_name='isa',
+            profile_name='erasure', data_chunks=None,
+            coding_chunks=None, failure_domain='disk', device_class=None
+        )
+
+    @mock.patch('ops_actions.create_erasure_profile.create_erasure_profile')
+    def test_create_lrc_profile(self, mock_create_erasure_profile):
+        self.harness.begin()
+        self.harness.charm.on_create_erasure_profile_action(
+            test_utils.MockActionEvent({
+                'name': 'erasure',
+                'plugin': 'lrc',
+                'failure-domain': 'disk',
+                'k': 6,
+                'm': 3,
+                'locality-chunks': 2,
+                'crush-locality': 'host',
+            }))
+        mock_create_erasure_profile.assert_called_once_with(
+            service='admin', erasure_plugin_name='lrc',
+            profile_name='erasure', data_chunks=None,
+            coding_chunks=None, locality=2, crush_locality='host',
+            failure_domain='disk', device_class=None
+        )
+
+    @mock.patch('ops_actions.create_erasure_profile.create_erasure_profile')
+    def test_create_shec_profile(self, mock_create_erasure_profile):
+        self.harness.begin()
+        self.harness.charm.on_create_erasure_profile_action(
+            test_utils.MockActionEvent({
+                'name': 'erasure',
+                'plugin': 'shec',
+                'failure-domain': 'disk',
+                'k': 6,
+                'm': 3,
+                'durability-estimator': 2
+            }))
+        mock_create_erasure_profile.assert_called_once_with(
+            service='admin', erasure_plugin_name='shec',
+            profile_name='erasure', data_chunks=None,
+            coding_chunks=None, durability_estimator=2,
+            failure_domain='disk', device_class=None
+        )
+
+    @mock.patch('ops_actions.create_erasure_profile.create_erasure_profile')
+    def test_create_clay_profile(self, mock_create_erasure_profile):
+        self.harness.begin()
+        self.harness.charm.on_create_erasure_profile_action(
+            test_utils.MockActionEvent({
+                'name': 'erasure',
+                'plugin': 'clay',
+                'failure-domain': 'disk',
+                'k': 6,
+                'm': 3,
+                'helper-chunks': 2,
+                'scalar-mds': 'jerasure'
+            }))
+        mock_create_erasure_profile.assert_called_once_with(
+            service='admin', erasure_plugin_name='clay',
+            profile_name='erasure', data_chunks=None,
+            coding_chunks=None, helper_chunks=2,
+            scalar_mds='jerasure', failure_domain='disk', device_class=None
+        )

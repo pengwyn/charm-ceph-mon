@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2019 Canonical Ltd
+# Copyright 2022 Canonical Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,16 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Creates a new CRUSH rule."""
+
+import logging
 import subprocess
 
-import charmhelpers.core.hookenv as hookenv
+logger = logging.getLogger(__name__)
 
 
-def create_crush_rule():
+def create_crush_rule(event) -> None:
     """Create a new CRUSH rule."""
-    rule_name = hookenv.action_get('name')
-    failure_domain = hookenv.action_get('failure-domain')
-    device_class = hookenv.action_get('device-class')
+
+    rule_name = event.params.get('name')
+    failure_domain = event.params.get('failure-domain')
+    device_class = event.params.get('device-class')
+
     cmd = [
         'ceph', 'osd', 'crush', 'rule',
         'create-replicated',
@@ -36,8 +41,8 @@ def create_crush_rule():
     try:
         subprocess.check_call(cmd)
     except subprocess.CalledProcessError as e:
-        hookenv.action_fail(str(e))
+        logger.warn(e)
+        event.fail("rule creation failed due to exception")
+        return
 
-
-if __name__ == '__main__':
-    create_crush_rule()
+    event.set_results({'message': 'success'})

@@ -151,6 +151,8 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
                              ops_actions.change_osd_weight.change_osd_weight)
         self._observe_action(self.on.copy_pool_action,
                              ops_actions.copy_pool.copy_pool)
+        self._observe_action(self.on.create_crush_rule_action,
+                             ops_actions.create_crush_rule.create_crush_rule)
 
         fw.observe(self.on.install, self.on_install)
         fw.observe(self.on.config_changed, self.on_config)

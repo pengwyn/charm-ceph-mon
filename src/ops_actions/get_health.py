@@ -14,15 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from subprocess import CalledProcessError
+from subprocess import check_output, CalledProcessError
+import logging
 
-from ceph_ops import get_health
-from charmhelpers.core.hookenv import log, action_set, action_fail
 
-if __name__ == '__main__':
+logger = logging.getLogger(__name__)
+
+
+def get_health_action(event):
     try:
-        action_set({'message': get_health()})
+        event.set_results(
+            {'message': check_output(['ceph', 'health']).decode('UTF-8')})
     except CalledProcessError as e:
-        log(e)
-        action_fail(
+        logger.warning(e)
+        event.fail(
             "ceph health failed with message: {}".format(str(e)))

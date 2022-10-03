@@ -18,4 +18,5 @@ from . import (   # noqa: F401
     create_crush_rule,
     create_erasure_profile,
     get_health,
+    get_erasure_profile,
 )

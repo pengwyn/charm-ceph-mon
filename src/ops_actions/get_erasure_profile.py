@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2016 Canonical Ltd
+# Copyright 2022 Canonical Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,15 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from charmhelpers.contrib.storage.linux.ceph import get_erasure_profile
-from charmhelpers.core.hookenv import action_get, action_set
+"""Get an erasure profile given a profile name."""
+
+from charmhelpers.contrib.storage.linux import ceph
 
 
-def make_erasure_profile():
-    name = action_get("name")
-    out = get_erasure_profile(service='admin', name=name)
-    action_set({'message': out})
-
-
-if __name__ == '__main__':
-    make_erasure_profile()
+def erasure_profile(event) -> None:
+    profile_name = event.params.get("name")
+    out = ceph.get_erasure_profile(service="admin", name=profile_name)
+    event.set_results({"message": out})

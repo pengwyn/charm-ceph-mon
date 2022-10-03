@@ -256,3 +256,30 @@ class GetHealthTestCase(test_utils.CharmTestCase):
         event.fail.assert_called_once_with(
             'ceph health failed with message: '
             "Command 'test' returned non-zero exit status 1.")
+
+
+class GetErasureProfile(test_utils.CharmTestCase):
+    """Run tests for action."""
+
+    def setUp(self):
+        self.harness = Harness(CephMonCharm)
+        self.harness.begin()
+        self.addCleanup(self.harness.cleanup)
+
+    @mock.patch('ops_actions.get_erasure_profile.ceph')
+    def test_get_erasure_profile_ok(self, mock_ceph):
+        mock_ceph.get_erasure_profile.return_value = "foo-erasure-params"
+        event = test_utils.MockActionEvent({"name": "foo-profile"})
+        self.harness.charm.on_get_erasure_profile_action(event)
+        event.set_results.assert_called_once_with((
+            {"message": "foo-erasure-params"}
+        ))
+
+    @mock.patch('ops_actions.get_erasure_profile.ceph')
+    def test_get_erasure_profile_notfound(self, mock_ceph):
+        mock_ceph.get_erasure_profile.return_value = None
+        event = test_utils.MockActionEvent({"name": "notfound-profile"})
+        self.harness.charm.on_get_erasure_profile_action(event)
+        event.set_results.assert_called_once_with((
+            {"message": None}
+        ))

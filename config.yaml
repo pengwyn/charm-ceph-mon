@@ -216,15 +216,15 @@ options:
       A comma-separated list of nagios servicegroups. If left empty, the
       nagios_context will be used as the servicegroup.
   nagios_degraded_thresh:
-    default: 1.0
+    default: 0.1
     type: float
     description: "Threshold for degraded ratio (0.1 = 10%)"
   nagios_misplaced_thresh:
-    default: 1.0
+    default: 0.1
     type: float
     description: "Threshold for misplaced ratio (0.1 = 10%)"
   nagios_recovery_rate:
-    default: '1'
+    default: '100'
     type: string
     description: |
       Recovery rate (in objects/s) below which we consider recovery

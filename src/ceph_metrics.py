@@ -9,12 +9,14 @@ import json
 import logging
 import os.path
 import pathlib
-from typing import Optional, Union, List
+from typing import Optional, Union, List, TYPE_CHECKING
 
 import ops.model
 from ops.model import BlockedStatus
 
-import charm
+if TYPE_CHECKING:
+    import charm
+
 from charms.prometheus_k8s.v0 import prometheus_scrape
 from charms_ceph import utils as ceph_utils
 from ops.framework import BoundEvent
@@ -32,7 +34,7 @@ DEFAULT_ALERT_RULES_RELATIVE_PATH = "files/prometheus_alert_rules"
 class CephMetricsEndpointProvider(prometheus_scrape.MetricsEndpointProvider):
     def __init__(
         self,
-        charm: charm.CephMonCharm,
+        charm: "charm.CephMonCharm",
         relation_name: str = prometheus_scrape.DEFAULT_RELATION_NAME,
         jobs=None,
         alert_rules_path: str = DEFAULT_ALERT_RULES_RELATIVE_PATH,
@@ -125,7 +127,7 @@ class CephMetricsEndpointProvider(prometheus_scrape.MetricsEndpointProvider):
                 self._set_alert_rules({})
                 return
             sink = pathlib.Path(self._alert_rules_path) / "alert.yaml.rules"
-            if sink.exists():
+            if sink.exists() or sink.is_symlink():
                 sink.unlink()
             sink.symlink_to(resource)
             alert_rules = prometheus_scrape.AlertRules(topology=self.topology)

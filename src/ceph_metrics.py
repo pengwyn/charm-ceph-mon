@@ -12,7 +12,6 @@ import pathlib
 from typing import Optional, Union, List, TYPE_CHECKING
 
 import ops.model
-from ops.model import BlockedStatus
 
 if TYPE_CHECKING:
     import charm
@@ -81,12 +80,8 @@ class CephMetricsEndpointProvider(prometheus_scrape.MetricsEndpointProvider):
             # We're not related to prom, don't care about alert rules
             self._charm._stored.alert_rule_errors = None
 
-    def assess_alert_rule_errors(self):
-        if self._charm._stored.alert_rule_errors:
-            self._charm.unit.status = BlockedStatus(
-                "invalid alert rules, check unit logs"
-            )
-            return True
+    def have_alert_rule_errors(self):
+        return bool(self._charm._stored.alert_rule_errors)
 
     def _on_alert_rule_status_changed(self, event):
         logger.debug(

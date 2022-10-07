@@ -122,7 +122,7 @@ class TestCephMetrics(unittest.TestCase):
         self.harness.add_resource("alert-rules", "not-a-rule")
         self.harness.charm.metrics_endpoint.update_alert_rules()
         self.assertTrue(
-            self.harness.charm.metrics_endpoint.assess_alert_rule_errors()
+            self.harness.charm.metrics_endpoint.have_alert_rule_errors()
         )
 
     @patch("ceph_metrics.ceph_utils.is_bootstrapped", return_value=True)

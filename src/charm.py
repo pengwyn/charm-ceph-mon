@@ -3,6 +3,7 @@ import logging
 
 from ops.main import main
 
+import ceph_status
 import charms.operator_libs_linux.v0.apt as apt
 import charms.operator_libs_linux.v1.systemd as systemd
 
@@ -40,77 +41,62 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
             systemd.service_pause('ceph-create-keys')
         except systemd.SystemdError:
             pass
-        hooks.assess_status(self)
 
     def on_config(self, event):
         hooks.config_changed()
-        hooks.assess_status(self)
 
     def on_pre_series_upgrade(self, event):
         hooks.pre_series_upgrade()
-        hooks.assess_status(self)
 
     def on_upgrade(self, event):
         self.metrics_endpoint.update_alert_rules()
         hooks.upgrade_charm()
-        hooks.assess_status(self)
 
     def on_post_series_upgrade(self, event):
         hooks.post_series_upgrade()
-        hooks.assess_status(self)
 
     # Relations.
     def on_mon_relation_joined(self, event):
         hooks.mon_relation_joined()
-        hooks.assess_status(self)
 
     def on_bootstrap_source_relation_changed(self, event):
         hooks.bootstrap_source_relation_changed()
-        hooks.assess_status(self)
 
     def on_prometheus_relation_joined_or_changed(self, event):
         hooks.prometheus_relation()
-        hooks.assess_status(self)
 
     def on_prometheus_relation_departed(self, event):
         hooks.prometheus_left()
-        hooks.assess_status(self)
 
     def on_mon_relation(self, event):
         hooks.mon_relation()
-        hooks.assess_status(self)
 
     def on_osd_relation(self, event):
         hooks.osd_relation()
-        hooks.assess_status(self)
 
     def on_dashboard_relation_joined(self, event):
         hooks.dashboard_relation()
-        hooks.assess_status(self)
 
     def on_radosgw_relation(self, event):
         hooks.radosgw_relation()
-        hooks.assess_status(self)
 
     def on_rbd_mirror_relation(self, event):
         hooks.rbd_mirror_relation()
-        hooks.assess_status(self)
 
     def on_mds_relation(self, event):
         hooks.mds_relation_joined()
-        hooks.assess_status(self)
 
     def on_admin_relation(self, event):
         hooks.admin_relation_joined()
-        hooks.assess_status(self)
 
     def on_client_relation(self, event):
         hooks.client_relation()
-        hooks.assess_status(self)
 
     def on_nrpe_relation(self, event):
         hooks.update_nrpe_config()
-        hooks.assess_status(self)
+
+    def on_commit(self, _event):
+        self.ceph_status.assess_status()
 
     # Actions.
 
@@ -141,12 +127,15 @@ class CephMonCharm(ops_openstack.core.OSBaseCharm):
         self._stored.is_started = True
 
         if self.is_blocked_insecure_cmr():
-            logging.error("Not running hook, CMR detected and not supported")
+            logging.error(
+                "Not running hook, CMR detected and not supported")
             return
 
         fw = self.framework
 
         self.metrics_endpoint = ceph_metrics.CephMetricsEndpointProvider(self)
+        self.ceph_status = ceph_status.StatusAssessor(self)
+
         self._observe_action(self.on.change_osd_weight_action,
                              ops_actions.change_osd_weight.change_osd_weight)
         self._observe_action(self.on.copy_pool_action,

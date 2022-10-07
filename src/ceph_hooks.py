@@ -44,13 +44,12 @@ from charmhelpers.core.hookenv import (
     leader_set, leader_get,
     is_leader,
     remote_unit,
-    Hooks, UnregisteredHookError,
+    Hooks,
     service_name,
     relations_of_type,
-    relations,
     status_set,
     local_unit,
-    application_version_set)
+)
 from charmhelpers.core.host import (
     service_pause,
     mkdir,
@@ -61,14 +60,12 @@ from charmhelpers.fetch import (
     apt_install,
     filter_installed_packages,
     add_source,
-    get_upstream_version,
 )
 from charmhelpers.contrib.openstack.alternatives import install_alternative
 from charmhelpers.contrib.openstack.utils import (
     clear_unit_paused,
     clear_unit_upgrading,
     get_os_codename_install_source,
-    is_unit_upgrading_set,
     set_unit_paused,
     set_unit_upgrading,
 )
@@ -82,19 +79,15 @@ from charmhelpers.core.templating import render
 from charmhelpers.contrib.storage.linux.ceph import (
     CephBrokerRq,
     CephConfContext,
-    OSD_SETTING_EXCEPTIONS,
     enable_pg_autoscale,
-    get_osd_settings,
     send_osd_settings,
 )
 from utils import (
-    add_rbd_mirror_features,
     assert_charm_supports_ipv6,
     get_cluster_addr,
     get_networks,
     get_public_addr,
     get_rbd_features,
-    has_rbd_mirrors,
     get_ceph_osd_releases,
     execute_post_osd_upgrade_steps,
     mgr_disable_module,
@@ -1291,94 +1284,6 @@ def is_unsupported_cmr(unit_name):
     return unsupported
 
 
-def assess_status(charm=None):
-    '''Assess status of current unit'''
-    application_version_set(get_upstream_version(VERSION_PACKAGE))
-    if not config('permit-insecure-cmr'):
-        units = [unit
-                 for rtype in relations()
-                 for relid in relation_ids(reltype=rtype)
-                 for unit in related_units(relid=relid)
-                 if is_cmr_unit(unit)]
-        if units:
-            status_set("blocked", "Unsupported CMR relation")
-            return
-    if is_unit_upgrading_set():
-        status_set("blocked",
-                   "Ready for do-release-upgrade and reboot. "
-                   "Set complete when finished.")
-        return
-
-    # Check that the no-bootstrap config option is set in conjunction with
-    # having the bootstrap-source relation established
-    if not config('no-bootstrap') and is_relation_made('bootstrap-source'):
-        status_set('blocked', 'Cannot join the bootstrap-source relation when '
-                              'no-bootstrap is False')
-        return
-
-    moncount = int(config('monitor-count'))
-    units = get_peer_units()
-    # not enough peers and mon_count > 1
-    if len(units.keys()) < moncount:
-        status_set('blocked', 'Insufficient peer units to bootstrap'
-                              ' cluster (require {})'.format(moncount))
-        return
-
-    # mon_count > 1, peers, but no ceph-public-address
-    ready = sum(1 for unit_ready in units.values() if unit_ready)
-    if ready < moncount:
-        status_set('waiting', 'Peer units detected, waiting for addresses')
-        return
-
-    configured_rbd_features = config('default-rbd-features')
-    if has_rbd_mirrors() and configured_rbd_features:
-        if add_rbd_mirror_features(
-                configured_rbd_features) != configured_rbd_features:
-            # The configured RBD features bitmap does not contain the features
-            # required for RBD Mirroring
-            status_set('blocked', 'Configuration mismatch: RBD Mirroring '
-                                  'enabled but incorrect value set for '
-                                  '``default-rbd-features``')
-            return
-
-    try:
-        get_osd_settings('client')
-    except OSD_SETTING_EXCEPTIONS as e:
-        status_set('blocked', str(e))
-        return
-
-    if charm is not None and charm.metrics_endpoint.assess_alert_rule_errors():
-        return
-
-    # active - bootstrapped + quorum status check
-    if ceph.is_bootstrapped() and ceph.is_quorum():
-        expected_osd_count = config('expected-osd-count') or 3
-        if sufficient_osds(expected_osd_count):
-            status_set('active', 'Unit is ready and clustered')
-        elif not relation_ids('osd'):
-            status_set('blocked', 'Missing relation: OSD')
-        else:
-            status_set(
-                'waiting',
-                'Monitor bootstrapped but waiting for number of'
-                ' OSDs to reach expected-osd-count ({})'
-                .format(expected_osd_count)
-            )
-    else:
-        # Unit should be running and clustered, but no quorum
-        # TODO: should this be blocked or waiting?
-        status_set('blocked', 'Unit not clustered (no quorum)')
-        # If there's a pending lock for this unit,
-        # can i get the lock?
-        # reboot the ceph-mon process
-
-
-@hooks.hook('update-status')
-@harden()
-def update_status():
-    log('Updating status.')
-
-
 @hooks.hook('pre-series-upgrade')
 def pre_series_upgrade():
     log("Running prepare series upgrade hook", "INFO")
@@ -1398,18 +1303,3 @@ def post_series_upgrade():
     # upgrading states.
     clear_unit_paused()
     clear_unit_upgrading()
-
-
-if __name__ == '__main__':
-    remote_block = False
-    remote_unit_name = remote_unit()
-    if remote_unit_name and is_cmr_unit(remote_unit_name):
-        remote_block = not config('permit-insecure-cmr')
-    if remote_block:
-        log("Not running hook, CMR detected and not supported", "ERROR")
-    else:
-        try:
-            hooks.execute(sys.argv)
-        except UnregisteredHookError as e:
-            log('Unknown hook {} - skipping.'.format(e))
-    assess_status()

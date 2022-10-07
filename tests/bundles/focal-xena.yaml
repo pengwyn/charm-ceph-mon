@@ -26,6 +26,7 @@ machines:
   '14':
   '15':
   '16':
+  '17':
 
 
 applications:
@@ -82,6 +83,15 @@ applications:
       - '6'
       - '7'
       - '8'
+
+  ceph-fs:
+    charm: ch:ceph-fs
+    num_units: 1
+    options:
+      source: *openstack-origin
+    channel: quincy/edge
+    to: 
+    - '17'
 
   rabbitmq-server:
     charm: ch:rabbitmq-server
@@ -217,6 +227,9 @@ relations:
 
   - - 'ceph-osd:mon'
     - 'ceph-mon:osd'
+
+  - - 'ceph-mon:mds'
+    - 'ceph-fs:ceph-mds'
 
   - - 'nova-cloud-controller:shared-db'
     - 'nova-cloud-controller-mysql-router:shared-db'

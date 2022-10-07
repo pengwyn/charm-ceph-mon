@@ -443,3 +443,5 @@ delete-user:
   required: [username]
 pg-repair:
   description: "Repair inconsistent placement groups, if safe to do so."
+reset-osd-count-report:
+  description: "Update report of osds present in osd tree. Used for monitoring."

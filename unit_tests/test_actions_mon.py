@@ -49,11 +49,6 @@ class OpsTestCase(CharmTestCase):
                       "action_fail",
                       "open"])
 
-    def test_get_health(self):
-        actions.get_health()
-        cmd = ['ceph', 'health']
-        self.check_output.assert_called_once_with(cmd)
-
     def test_get_version_report_ok(self):
         def _call_rslt():
             with open('unit_tests/ceph_ls_node.json') as f:

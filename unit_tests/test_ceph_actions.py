@@ -230,3 +230,29 @@ class CreateErasureProfileTestCase(test_utils.CharmTestCase):
             coding_chunks=None, helper_chunks=2,
             scalar_mds='jerasure', failure_domain='disk', device_class=None
         )
+
+
+class GetHealthTestCase(test_utils.CharmTestCase):
+    """Run tests for action."""
+
+    def setUp(self):
+        self.harness = Harness(CephMonCharm)
+        self.harness.begin()
+        self.addCleanup(self.harness.cleanup)
+
+    @mock.patch('ops_actions.get_health.check_output')
+    def test_get_health_action(self, mock_check_output):
+        mock_check_output.return_value = b'yay'
+        event = test_utils.MockActionEvent({})
+        self.harness.charm.on_get_health_action(event)
+        event.set_results.assert_called_once_with(({'message': 'yay'}))
+
+    @mock.patch('ops_actions.get_health.check_output')
+    def test_get_health_action_error(self, mock_check_output):
+        mock_check_output.side_effect = subprocess.CalledProcessError(
+            1, 'test')
+        event = test_utils.MockActionEvent({})
+        self.harness.charm.on_get_health_action(event)
+        event.fail.assert_called_once_with(
+            'ceph health failed with message: '
+            "Command 'test' returned non-zero exit status 1.")

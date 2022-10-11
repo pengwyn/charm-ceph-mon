@@ -17,4 +17,5 @@ from . import (   # noqa: F401
     copy_pool,
     create_crush_rule,
     create_erasure_profile,
+    get_health,
 )

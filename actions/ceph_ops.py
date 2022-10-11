@@ -83,20 +83,6 @@ def get_versions_report():
     return json.dumps(report, indent=4)
 
 
-def get_health():
-    """
-    Returns the output of 'ceph health'.
-
-    On error, 'unknown' is returned.
-    """
-    try:
-        value = check_output(['ceph', 'health']).decode('UTF-8')
-        return value
-    except CalledProcessError as e:
-        action_fail(str(e))
-        return 'Getting health failed, health unknown'
-
-
 def pool_get():
     """
     Returns a key from a pool using 'ceph osd pool get'.

@@ -15,4 +15,5 @@
 from . import (   # noqa: F401
     change_osd_weight,
     copy_pool,
+    create_crush_rule,
 )

@@ -20,4 +20,4 @@
       - charm-build
       - tox-py38
     vars:
-      tox_extra_args: install:local-focal-yoga
+      tox_extra_args: '-- install:local-focal-yoga'

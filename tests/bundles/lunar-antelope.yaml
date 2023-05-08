@@ -1,7 +1,7 @@
 variables:
   openstack-origin: &openstack-origin distro
 
-series: jammy
+series: lunar
 
 comment:
 - 'machines section to decide order of deployment. database sooner = faster'
@@ -34,19 +34,19 @@ applications:
 
   keystone-mysql-router:
     charm: ch:mysql-router
-    channel: 8.0.19/edge
+    channel: latest/edge
   glance-mysql-router:
     charm: ch:mysql-router
-    channel: 8.0.19/edge
+    channel: latest/edge
   cinder-mysql-router:
     charm: ch:mysql-router
-    channel: 8.0.19/edge
+    channel: latest/edge
   nova-cloud-controller-mysql-router:
     charm: ch:mysql-router
-    channel: 8.0.19/edge
+    channel: latest/edge
   placement-mysql-router:
     charm: ch:mysql-router
-    channel: 8.0.19/edge
+    channel: latest/edge
 
   mysql-innodb-cluster:
     charm: ch:mysql-innodb-cluster
@@ -57,7 +57,7 @@ applications:
       - '0'
       - '1'
       - '2'
-    channel: 8.0.19/edge
+    channel: latest/edge
 
   ceph-osd:
     charm: ch:ceph-osd
@@ -101,7 +101,7 @@ applications:
       source: *openstack-origin
     to:
       - '9'
-    channel: 3.9/edge
+    channel: latest/edge
 
   keystone:
     expose: True
@@ -111,7 +111,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '10'
-    channel: yoga/edge
+    channel: 2023.1/edge
 
   nova-compute:
     charm: ch:nova-compute
@@ -121,7 +121,7 @@ applications:
       libvirt-image-backend: rbd
     to:
       - '11'
-    channel: yoga/edge
+    channel: 2023.1/edge
 
   glance:
     expose: True
@@ -131,7 +131,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '12'
-    channel: yoga/edge
+    channel: 2023.1/edge
 
   cinder:
     expose: True
@@ -143,11 +143,11 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '13'
-    channel: yoga/edge
+    channel: 2023.1/edge
 
   cinder-ceph:
     charm: ch:cinder-ceph
-    channel: yoga/edge
+    channel: 2023.1/edge
 
   nova-cloud-controller:
     expose: True
@@ -157,7 +157,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '14'
-    channel: yoga/edge
+    channel: 2023.1/edge
 
   placement:
     charm: ch:placement
@@ -166,7 +166,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '15'
-    channel: yoga/edge
+    channel: 2023.1/edge
 
   prometheus2:
     charm: ch:prometheus2

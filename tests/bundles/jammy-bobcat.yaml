@@ -1,5 +1,5 @@
 variables:
-  openstack-origin: &openstack-origin cloud:jammy-zed
+  openstack-origin: &openstack-origin cloud:jammy-bobcat
 
 local_overlay_enabled: False
 
@@ -58,6 +58,13 @@ applications:
       - '2'
     channel: 8.0/edge
 
+  rabbitmq-server:
+    charm: ch:rabbitmq-server
+    num_units: 1
+    to:
+      - '9'
+    channel: 3.9/edge
+
   ceph-osd:
     charm: ch:ceph-osd
     num_units: 3
@@ -93,13 +100,6 @@ applications:
     to: 
     - '17'
 
-  rabbitmq-server:
-    charm: ch:rabbitmq-server
-    num_units: 1
-    to:
-      - '9'
-    channel: 3.9/edge
-
   keystone:
     expose: True
     charm: ch:keystone
@@ -108,7 +108,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '10'
-    channel: zed/edge
+    channel: 2023.1/edge
 
   nova-compute:
     charm: ch:nova-compute
@@ -118,7 +118,7 @@ applications:
       libvirt-image-backend: rbd
     to:
       - '11'
-    channel: zed/edge
+    channel: 2023.1/edge
 
   glance:
     expose: True
@@ -128,7 +128,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '12'
-    channel: zed/edge
+    channel: 2023.1/edge
 
   cinder:
     expose: True
@@ -140,11 +140,11 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '13'
-    channel: zed/edge
+    channel: 2023.1/edge
 
   cinder-ceph:
     charm: ch:cinder-ceph
-    channel: zed/edge
+    channel: 2023.1/edge
 
   nova-cloud-controller:
     expose: True
@@ -154,7 +154,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '14'
-    channel: zed/edge
+    channel: 2023.1/edge
 
   placement:
     charm: ch:placement
@@ -163,7 +163,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '15'
-    channel: zed/edge
+    channel: 2023.1/edge
 
   prometheus2:
     charm: ch:prometheus2

@@ -12,7 +12,8 @@ tags:
 series:
 - focal
 - jammy
-- kinetic
+- lunar
+- mantic
 peers:
   mon:
     interface: ceph

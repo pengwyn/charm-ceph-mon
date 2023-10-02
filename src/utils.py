@@ -331,7 +331,7 @@ def execute_post_osd_upgrade_steps(ceph_osd_release):
 @tenacity.retry(
     wait=tenacity.wait_exponential(multiplier=1, max=10),
     reraise=True,
-    stop=tenacity.stop_after_attempt(8))
+    stop=tenacity.stop_after_attempt(30))
 def _get_versions():
     """Gets the ceph versions.
 

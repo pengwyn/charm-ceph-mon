@@ -260,6 +260,29 @@ options:
     description: |
       Whether additional checks report warning or error when their checks
       are positive.
+  nagios_rgw_sites:
+    default: ""
+    type: string
+    description: |
+       Comma-separated list of sites that are expected to be connected to this
+       radosgw. These will be checked by the line "data sync source...
+       (site-name)" in the output of `radosgw-admin sync status`.
+       .
+       Example:
+       .
+       site1,site2
+  nagios_rgw_additional_checks:
+    default: ""
+    type: string
+    description: |
+       List describing additional checks. Each item is a regular expression to
+       search in the output of radosgw-admin sync status. Note, this is not a
+       dictionary unlike `nagios_additional_checks`.
+       .
+       Example:
+       .
+       ['data is behind on']
+       .
   use-direct-io:
     type: boolean
     default: True

@@ -1193,6 +1193,10 @@ def update_nrpe_config():
                            'check_ceph_osd_count.py'),
               os.path.join(NAGIOS_PLUGINS, 'check_ceph_osd_count.py'))
 
+        rsync(os.path.join(os.getenv('CHARM_DIR'), 'files', 'nagios',
+                           'check_radosgw_sync_status.py'),
+              os.path.join(NAGIOS_PLUGINS, 'check_radosgw_sync_status.py'))
+
     script = os.path.join(SCRIPTS_DIR, 'collect_ceph_status.sh')
     rsync(os.path.join(os.getenv('CHARM_DIR'), 'files',
                        'nagios', 'collect_ceph_status.sh'),
@@ -1252,6 +1256,19 @@ def update_nrpe_config():
             description='Check whether all OSDs are up and in',
             check_cmd=check_cmd
         )
+
+    check_cmd = 'check_radosgw_sync_status.py -f {}'.format(STATUS_FILE)
+    if config('nagios_rgw_sites'):
+        check_cmd += ' --sites "{}"'.format(config('nagios_rgw_sites'))
+    if config('nagios_rgw_additional_checks'):
+        for check in config('nagios_rgw_additional_checks'):
+            check_cmd += ' --additional-check "{}"'.format(check)
+    nrpe_setup.add_check(
+        shortname='radosgw_multisite',
+        description='Check multisite radosgw health',
+        check_cmd=check_cmd
+    )
+
     nrpe_setup.write()
 
 

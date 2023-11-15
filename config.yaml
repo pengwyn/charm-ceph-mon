@@ -276,8 +276,8 @@ options:
     type: string
     description: |
        List describing additional checks. Each item is a regular expression to
-       search in the output of radosgw-admin sync status. Note, this is not a
-       dictionary unlike `nagios_additional_checks`.
+       search in the output of radosgw-admin sync status. Note, this is a
+       list unlike `nagios_additional_checks` which uses a dictionary.
        .
        Example:
        .

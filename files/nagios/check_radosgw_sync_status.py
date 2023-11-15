@@ -168,7 +168,9 @@ def main(args):
     EXIT_CODES = {'ok': 0, 'warning': 1, 'critical': 2, 'unknown': 3}
     exitcode = 'unknown'
     try:
-        check_ceph_status(args)
+        output_msg = check_ceph_status(args)
+        print(output_msg)
+        exitcode = 'ok'
     except UnknownError as msg:
         print(msg)
         exitcode = 'unknown'

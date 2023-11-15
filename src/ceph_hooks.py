@@ -108,6 +108,7 @@ NAGIOS_PLUGINS = '/usr/local/lib/nagios/plugins'
 NAGIOS_FILE_FOLDER = '/var/lib/nagios'
 SCRIPTS_DIR = '/usr/local/bin'
 STATUS_FILE = '{}/cat-ceph-status.txt'.format(NAGIOS_FILE_FOLDER)
+RADOSGW_STATUS_FILE = '{}/current-radosgw-admin-sync-status.raw'.format(NAGIOS_FILE_FOLDER)
 STATUS_CRONFILE = '/etc/cron.d/cat-ceph-health'
 HOST_OSD_COUNT_REPORT = '{}/host-osd-report.json'.format(NAGIOS_FILE_FOLDER)
 
@@ -1257,12 +1258,13 @@ def update_nrpe_config():
             check_cmd=check_cmd
         )
 
-    check_cmd = 'check_radosgw_sync_status.py -f {}'.format(STATUS_FILE)
+    check_cmd = 'check_radosgw_sync_status.py -f {}'.format(RADOSGW_STATUS_FILE)
     if config('nagios_rgw_sites'):
         check_cmd += ' --sites "{}"'.format(config('nagios_rgw_sites'))
     if config('nagios_rgw_additional_checks'):
-        for check in config('nagios_rgw_additional_checks'):
-            check_cmd += ' --additional-check "{}"'.format(check)
+        x = ast.literal_eval(config('nagios_rgw_additional_checks'))
+        for check in x:
+            check_cmd += ' --additional_check \"{}\"'.format(check)
     nrpe_setup.add_check(
         shortname='radosgw_multisite',
         description='Check multisite radosgw health',
